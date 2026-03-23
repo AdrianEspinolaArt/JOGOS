@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JOGO DOS 7 ERROS</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== TEMPLATE BASE (embutido) ===== */
+        :root {
+            --primary: #da5d64;
+            --primary-dark: #d92f4f;
+            --secondary: #1b9638;
+            --bg-gradient: linear-gradient(135deg, #6cb52d 0%, #1b9638 100%);
+        }
+
+        body {
+            font-family: 'Fredoka One', cursive, sans-serif;
+            background: var(--bg-gradient);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--primary);
+        }
+
+        .game-title {
+            margin: 20px 0 10px;
+            font-size: 2rem;
+            color: white;
+            text-shadow: 4px 4px 0 var(--primary);
+        }
+
+        .top-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .timer {
+            font-size: 1.3rem;
+            background: var(--primary);
+            color: white;
+            padding: 5px 20px;
+            border-radius: 50px;
+            border: 3px solid white;
+        }
+
+        .box {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 3px solid var(--primary);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .btn-primary {
+            padding: 12px 30px;
+            font-family: inherit;
+            font-size: 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            text-transform: uppercase;
+        }
+
+        .btn-primary:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 var(--primary-dark);
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .board-area {
+            width: 100%;
+            height: 350px;
+            background: rgba(255,255,255,0.4);
+            border: 6px solid var(--primary);
+            border-radius: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(41, 98, 255, 0.9);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 30px;
+            border: 8px solid var(--secondary);
+            text-align: center;
+        }
+
+        /* ===== ESTILOS ESPECÍFICOS DO JOGO ===== */
+        .game-container { max-width: 1000px; }
+        .images-row { display:flex; gap:16px; align-items:flex-start; justify-content:center; }
+        .image-box { background: white; border: 3px solid var(--primary); border-radius: 12px; padding:8px; }
+        .image-box img { display:block; max-width:100%; height:auto; }
+        .right-image-wrapper { position: relative; display:block; }
+        .right-image-wrapper img { display:block; width:100%; height:auto; }
+
+        /* Hotspot invisível */
+        .hotspot {
+            position: absolute;
+            cursor: pointer;
+            background: transparent;
+            z-index: 20;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+        }
+        .hotspot.found { pointer-events: none; }
+        .hotspot.found::after {
+            content: '\2716'; /* heavy multiplication X */
+            position: absolute;
+            left: 50%; top: 50%; transform: translate(-50%,-50%);
+            color: white; background: var(--primary);
+            width: 44px; height: 44px; display:flex; align-items:center; justify-content:center;
+            font-size: 28px; border-radius: 8px; box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+        }
+
+        /* Responsive: imagens empilhadas no mobile */
+        @media (max-width: 700px) {
+            .images-row { flex-direction: column; }
+        }
+        /* Contador de erros */
+        .counter { font-size: 1.1rem; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <h1 class="game-title">JOGO DOS 7 ERROS – A FORMIGA</h1>
+
+    <div class="top-controls">
+        <div class="timer">⏱️ 00:00</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-left:12px;">
+            <div class="counter box">Erros encontrados: <span id="found-count">0</span> / 7</div>
+            <div class="button-group">
+                <button class="btn-primary" id="start-btn">INICIAR</button>
+                <button class="btn-primary" id="restart-btn">REINICIAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="box instructions">Encontre as 7 diferenças na imagem da direita. Clique sobre as áreas diferentes.</div>
+
+    <div class="game-container">
+        <div class="images-row">
+            <div class="image-box" style="flex:1;max-width:48%;">
+                <img src="47715.jpg" alt="Formiga - base" />
+            </div>
+
+            <div class="image-box right-image-box" style="flex:1;max-width:48%;">
+                <div class="right-image-wrapper">
+                    <img id="right-image" src="errado.jpg" alt="Formiga - com erros" />
+
+                    <!-- Hotspots: coordenadas relativas ao tamanho da imagem (x/y em %) -->
+                    <div class="hotspot" data-index="1" data-x="20" data-y="15" data-size="50" title="Flor - lateral esquerda"></div>
+                    <div class="hotspot" data-index="2" data-x="40" data-y="12.7" data-size="50" title="Flor - pétala superior"></div>
+                    <div class="hotspot" data-index="3" data-x="25" data-y="39" data-size="10.5" title="Corpo esquerdo"></div>
+                    <div class="hotspot" data-index="4" data-x="90" data-y="50" data-size="10" title="Cabeça - lado direito"></div>
+                    <div class="hotspot" data-index="5" data-x="89.0" data-y="67.5" data-size="10" title="Folha direita - haste"></div>
+                    <div class="hotspot" data-index="6" data-x="90" data-y="84.3" data-size="10" title="Canto inferior direito"></div>
+                    <div class="hotspot" data-index="7" data-x="20.2" data-y="85.6" data-size="10.8" title="Pata inferior esquerda"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal padrão do template (id e estrutura compatível com jsbase.js) -->
+    <div class="modal" id="win-modal">
+        <div class="modal-content">
+            <h2>🎉 PARABÉNS! 🎉</h2>
+            <p id="win-message">Você encontrou os 7 erros em X minutos e Y segundos.</p>
+            <button class="btn-primary" id="modal-restart">REINICIAR</button>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            // Elements
+            const hotspots = Array.from(document.querySelectorAll('.hotspot'));
+            const foundCountEl = document.getElementById('found-count');
+            const startBtn = document.getElementById('start-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            const modalRestart = document.getElementById('modal-restart');
+            const winMessage = document.getElementById('win-message');
+            const timerDisplay = document.querySelector('.timer');
+            const winModal = document.getElementById('win-modal');
+            const rightImage = document.getElementById('right-image');
+            const rightWrapper = document.querySelector('.right-image-wrapper');
+
+            // Timer state
+            let startTime = null;
+            let interval = null;
+            let running = false;
+
+            // Game state
+            let found = 0;
+
+            function updateTimer(){
+                if(!running) return;
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const min = String(Math.floor(elapsed / 60)).padStart(2,'0');
+                const sec = String(elapsed % 60).padStart(2,'0');
+                timerDisplay.textContent = `⏱️ ${min}:${sec}`;
+            }
+
+            function startTimer(){
+                if(running) return;
+                startTime = Date.now();
+                running = true;
+                updateTimer();
+                interval = setInterval(updateTimer, 1000);
+            }
+
+            function stopTimer(){
+                running = false;
+                clearInterval(interval);
+            }
+
+            function resetTimerDisplay(){
+                stopTimer();
+                timerDisplay.textContent = '⏱️ 00:00';
+                startTime = null;
+            }
+
+            function formatElapsedForMessage(){
+                if(!startTime){ return '0 minutos e 0 segundos.'; }
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const m = Math.floor(elapsed / 60);
+                const s = elapsed % 60;
+                return `${m} minutos e ${s} segundos.`;
+            }
+
+            function showWinModal(){
+                stopTimer();
+                winModal.style.display = 'flex';
+            }
+
+            function resetGame(){
+                resetTimerDisplay();
+                winModal.style.display = 'none';
+            }
+
+            // Posiciona hotspots com base no tamanho real da imagem renderizada
+            function layoutHotspots(){
+                if(!rightImage || !rightWrapper) return;
+                const w = rightImage.clientWidth;
+                const h = rightImage.clientHeight;
+                if(!w || !h) return;
+
+                const minDim = Math.min(w, h);
+                hotspots.forEach(hs => {
+                    const x = parseFloat(hs.dataset.x || '0');
+                    const y = parseFloat(hs.dataset.y || '0');
+                    const sizePct = parseFloat(hs.dataset.size || '10');
+                    const pxSize = Math.max(28, Math.min(64, (sizePct / 100) * minDim));
+
+                    hs.style.left = `${(x / 100) * w}px`;
+                    hs.style.top = `${(y / 100) * h}px`;
+                    hs.style.width = `${pxSize}px`;
+                    hs.style.height = `${pxSize}px`;
+                });
+            }
+
+            // Hotspot click
+            function onHotspotClick(e){
+                if(!running) return; // timer must be started
+                const el = e.currentTarget;
+                if(el.classList.contains('found')) return;
+                el.classList.add('found');
+                el.style.pointerEvents = 'none';
+                found += 1;
+                foundCountEl.textContent = found;
+
+                if(found === 7){
+                    // show modal with formatted time
+                    const formatted = formatElapsedForMessage();
+                    winMessage.textContent = `Você encontrou os 7 erros em ${formatted}`;
+                    showWinModal();
+                }
+            }
+
+            hotspots.forEach(h => h.addEventListener('click', onHotspotClick));
+
+            // Start button
+            startBtn.addEventListener('click', function(){
+                startTimer();
+                startBtn.style.display = 'none';
+            });
+
+            // Full reset: reset local state, markers, timer, modal and UI
+            function fullReset(){
+                found = 0;
+                foundCountEl.textContent = found;
+                hotspots.forEach(h => { h.classList.remove('found'); h.style.pointerEvents = 'auto'; });
+                startBtn.style.display = 'inline-block';
+                resetGame();
+            }
+
+            restartBtn.addEventListener('click', fullReset);
+            modalRestart.addEventListener('click', fullReset);
+
+            // Prevent clicks on left image
+            const leftImg = document.querySelector('.images-row .image-box:first-child img');
+            if(leftImg) leftImg.style.pointerEvents = 'none';
+
+            // Recalcula hotspots quando a imagem/carregamento/tela mudarem
+            if (rightImage) {
+                rightImage.addEventListener('load', layoutHotspots);
+                if (rightImage.complete) {
+                    requestAnimationFrame(layoutHotspots);
+                }
+            }
+            window.addEventListener('resize', layoutHotspots);
+            window.addEventListener('orientationchange', layoutHotspots);
+
+        })();
+    </script>
+</body>
+</html>

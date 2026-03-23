@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PIQUENIQUE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #623f92;
+            --primary-dark: #4a2e6e;
+            --secondary: #ed6b1c;
+            --danger-color: #FF3131;
+            --success-color: #22c55e;
+            --text-dark: #2c3e50;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            text-transform: uppercase;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Fredoka One', cursive;
+            background: linear-gradient(135deg, #8b6bbf 0%, #623f92 100%);
+            color: var(--text-dark);
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* ── CLOSE ── */
+        #btn-exit {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            background: var(--danger-color);
+            border: 3px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* ── HEADER ── */
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.25);
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        #header .title {
+            font-size: 0.95rem;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .header-stat {
+            font-size: 0.85rem;
+            color: white;
+            background: var(--secondary);
+            padding: 3px 12px;
+            border-radius: 20px;
+            border: 2px solid white;
+        }
+
+        #header-right {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        /* ── PROGRESS ── */
+        #progress-wrap {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.3);
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--success-color);
+            transition: width 0.4s ease;
+        }
+
+        /* ── INSTRUCTION BANNER ── */
+        #instruction {
+            text-align: center;
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.85rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* ── GRID ── */
+        #items-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 10px;
+            overflow-y: auto;
+            align-content: start;
+        }
+
+        .grid-item {
+            background: white;
+            border-radius: 18px;
+            border: 3px solid var(--secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            transition: transform 0.1s, opacity 0.3s;
+            aspect-ratio: 1;
+        }
+
+        .grid-item:active {
+            transform: scale(0.93);
+        }
+
+        .grid-item .item-img {
+            width: 70%;
+            height: auto;
+            max-height: 65%;
+            object-fit: contain;
+            pointer-events: none;
+            border-radius: 8px;
+        }
+
+        .grid-item .item-name {
+            font-size: clamp(0.5rem, 2vw, 0.7rem);
+            color: var(--text-dark);
+            margin-top: 4px;
+            text-align: center;
+            line-height: 1.1;
+            pointer-events: none;
+        }
+
+        /* correto */
+        .grid-item.correct {
+            animation: itemPop 0.5s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes itemPop {
+            0% { transform: scale(1); border-color: var(--success-color); }
+            30% { transform: scale(1.15); background: #dcfce7; border-color: var(--success-color); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* errado */
+        .grid-item.wrong {
+            animation: itemShake 0.5s;
+            border-color: var(--danger-color);
+            background: #fee2e2;
+        }
+
+        @keyframes itemShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        /* já foi */
+        .grid-item.gone {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* ── OVERLAY ── */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(139,107,191,0.95) 0%, rgba(98,63,146,0.95) 100%);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .msg-card {
+            background: white;
+            border: 5px solid var(--secondary);
+            padding: 20px 25px;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 500px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .msg-card h2 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin: 0 0 10px;
+        }
+
+        .msg-card p {
+            font-size: 1.05rem;
+            color: var(--text-dark);
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .btn-play {
+            background: var(--primary);
+            color: white;
+            border: 3px solid white;
+            padding: 14px 45px;
+            font-size: 1.6rem;
+            font-family: 'Fredoka One', cursive;
+            border-radius: 60px;
+            margin-top: 15px;
+            box-shadow: 0 5px 0 var(--primary-dark), 0 8px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-play:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--primary-dark);
+        }
+
+        .instructions-box {
+            background: rgba(98,63,146,0.08);
+            border: 3px solid var(--secondary);
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            text-align: left;
+        }
+
+        .instructions-box p {
+            font-size: 0.95rem;
+            margin: 6px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="btn-exit" onclick="location.reload()">X</div>
+
+    <div id="header">
+        <span class="title">PIQUENIQUE</span>
+        <div id="header-right">
+            <span class="header-stat" id="score-display">0</span>
+            <span class="header-stat" id="timer-display">00:00</span>
+        </div>
+    </div>
+    <div id="progress-wrap">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div id="instruction">CLIQUE NOS ITENS QUE LEVAMOS PARA UM PIQUENIQUE!</div>
+
+    <div id="items-grid"></div>
+</div>
+
+<!-- TELA INICIAL -->
+<div id="overlay-start" class="overlay">
+    <div class="msg-card">
+        <h2>PIQUENIQUE</h2>
+        <p>VAMOS PREPARAR UM PIQUENIQUE!</p>
+
+        <div class="instructions-box">
+            <p><b style="color:var(--success-color);">CLIQUE</b> NOS ITENS QUE PODEMOS LEVAR PARA UM PIQUENIQUE.</p>
+            <p><b style="color:var(--danger-color);">CUIDADO!</b> SE CLICAR EM UM ITEM ERRADO, VOCÊ PERDE PONTOS.</p>
+            <p>ENCONTRE TODOS OS ITENS CERTOS O MAIS RÁPIDO POSSÍVEL!</p>
+        </div>
+
+        <button class="btn-play" onclick="initGame()">COMEÇAR!</button>
+    </div>
+</div>
+
+<!-- TELA FINAL -->
+<div id="overlay-end" class="overlay" style="display:none;">
+    <div class="msg-card">
+        <h2 id="end-title">PARABÉNS!</h2>
+        <p id="end-msg"></p>
+        <button class="btn-play" onclick="location.reload()">JOGAR NOVAMENTE</button>
+    </div>
+</div>
+
+<script>
+    /* ITENS DO JOGO – imagens na pasta images/ */
+    const allItems = [
+        // CERTOS – itens de piquenique
+        { name: 'BANANA',         img: 'images/banana.png',         correct: true },
+        { name: 'BOLO',           img: 'images/bolo.png',           correct: true },
+        { name: 'COPOS',          img: 'images/copos.png',          correct: true },
+        { name: 'FILTRO SOLAR',   img: 'images/filtro_solar.png',   correct: true },
+        { name: 'GELEIA',         img: 'images/geleia.png',         correct: true },
+        { name: 'ÓCULOS DE SOL',  img: 'images/oculos_de_sol.png',  correct: true },
+        { name: 'PÃO',            img: 'images/pao.png',            correct: true },
+        { name: 'PRATOS',         img: 'images/pratos.png',         correct: true },
+        { name: 'SUCO',           img: 'images/suco_laranja.png',   correct: true },
+        { name: 'UVAS',           img: 'images/uvas.png',           correct: true },
+
+        // ERRADOS – não pertencem ao piquenique
+        { name: 'CEBOLA',         img: 'images/cebola.png',         correct: false },
+        { name: 'CONCHA',         img: 'images/concha.png',         correct: false },
+        { name: 'ESCOVA',         img: 'images/escova_dente.png',   correct: false },
+        { name: 'FITA DE CABELO', img: 'images/fita_cabelo.png',    correct: false },
+        { name: 'LATA DE TINTA',  img: 'images/lata_de_tinta.png',  correct: false },
+        { name: 'MARTELO',        img: 'images/martelo.png',        correct: false },
+        { name: 'MEIA',           img: 'images/meia.png',           correct: false },
+        { name: 'RELÓGIO',        img: 'images/relogio.png',        correct: false },
+    ];
+
+    /* ── STATE ── */
+    let gameItems = [];
+    let totalCorrect = 0;
+    let found = 0;
+    let score = 0;
+    let timerSec = 0;
+    let timerInt = null;
+    let gameActive = false;
+
+    /* ── AUDIO ── */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playBell() {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(880, audioCtx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.1);
+        g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function playBuzz() {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(150, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.3);
+    }
+
+    /* ── SHUFFLE ── */
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    /* ── INIT ── */
+    function initGame() {
+        document.getElementById('overlay-start').style.display = 'none';
+        audioCtx.resume();
+
+        gameItems = shuffle([...allItems]);
+        totalCorrect = gameItems.filter(i => i.correct).length;
+        found = 0;
+        score = 0;
+        timerSec = 0;
+        gameActive = true;
+
+        updateScore();
+        updateProgress();
+        renderItems();
+        startTimer();
+    }
+
+    function renderItems() {
+        const grid = document.getElementById('items-grid');
+        grid.innerHTML = '';
+
+        gameItems.forEach((item, idx) => {
+            const el = document.createElement('div');
+            el.className = 'grid-item';
+            el.dataset.index = idx;
+            el.innerHTML = `<img class="item-img" src="${item.img}" alt="${item.name}"><span class="item-name">${item.name}</span>`;
+            el.addEventListener('click', () => onItemClick(el, idx));
+            grid.appendChild(el);
+        });
+    }
+
+    /* ── CLICK HANDLER ── */
+    function onItemClick(el, idx) {
+        if (!gameActive) return;
+        if (el.classList.contains('correct') || el.classList.contains('gone')) return;
+
+        const item = gameItems[idx];
+
+        if (item.correct) {
+            /* ACERTOU */
+            playBell();
+            found++;
+            score += 10;
+            updateScore();
+            updateProgress();
+
+            el.classList.add('correct');
+            setTimeout(() => {
+                el.classList.add('gone');
+                checkWin();
+            }, 500);
+        } else {
+            /* ERROU */
+            playBuzz();
+            score = Math.max(0, score - 5);
+            updateScore();
+
+            el.classList.add('wrong');
+            setTimeout(() => {
+                el.classList.remove('wrong');
+                el.style.borderColor = '';
+                el.style.background = '';
+            }, 500);
+        }
+    }
+
+    /* ── TIMER ── */
+    function startTimer() {
+        const display = document.getElementById('timer-display');
+        timerInt = setInterval(() => {
+            if (!gameActive) return;
+            timerSec++;
+            const m = String(Math.floor(timerSec / 60)).padStart(2, '0');
+            const s = String(timerSec % 60).padStart(2, '0');
+            display.textContent = m + ':' + s;
+        }, 1000);
+    }
+
+    function updateScore() {
+        document.getElementById('score-display').textContent = score;
+    }
+
+    function updateProgress() {
+        const pct = totalCorrect > 0 ? (found / totalCorrect) * 100 : 0;
+        document.getElementById('progress-bar').style.width = pct + '%';
+    }
+
+    /* ── VICTORY ── */
+    function checkWin() {
+        if (found >= totalCorrect) {
+            gameActive = false;
+            clearInterval(timerInt);
+
+            const min = Math.floor(timerSec / 60);
+            const sec = timerSec % 60;
+            let tempoStr = '';
+            if (min > 0) {
+                tempoStr = min + (min === 1 ? ' MINUTO' : ' MINUTOS');
+                if (sec > 0) tempoStr += ' E ' + sec + (sec === 1 ? ' SEGUNDO' : ' SEGUNDOS');
+            } else {
+                tempoStr = sec + (sec === 1 ? ' SEGUNDO' : ' SEGUNDOS');
+            }
+
+            setTimeout(() => {
+                document.getElementById('end-title').textContent = 'PARABÉNS!';
+                document.getElementById('end-msg').innerHTML =
+                    'VOCÊ TERMINOU EM ' + tempoStr + '!<br><b>PONTUAÇÃO: ' + score + '</b>';
+                document.getElementById('overlay-end').style.display = 'flex';
+            }, 400);
+        }
+    }
+
+    /* ── PREVENT ZOOM ── */
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+</script>
+</body>
+</html>

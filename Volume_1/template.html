@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Título do Jogo</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1 class="game-title">TÍTULO DO JOGO</h1>
+
+<div class="top-controls">
+    <div class="timer">⏱️ 00:00</div>
+    <div class="button-group">
+        <button class="btn-primary" id="start-btn">INICIAR</button>
+        <button class="btn-primary" id="restart-btn">REINICIAR</button>
+    </div>
+</div>
+
+<div class="box instructions">
+    INSTRUÇÃO PADRÃO DO JOGO AQUI
+</div>
+
+<div class="game-container">
+    <!-- Área principal do jogo -->
+    <div class="board-area"></div>
+</div>
+
+<div class="modal" id="win-modal">
+    <div class="modal-content">
+        <h2>🎉 PARABÉNS! 🎉</h2>
+        <p id="win-message">Você completou o jogo!</p>
+        <button class="btn-primary">JOGAR DE NOVO</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

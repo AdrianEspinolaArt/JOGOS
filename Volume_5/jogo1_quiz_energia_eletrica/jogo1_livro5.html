@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Consumo Consciente de Energia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #1E3A8A 0%, #111827 100%);
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1F2937;
+            overflow-x: hidden;
+        }
+
+        h1, h3, .font-game {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .glass {
+            background: #FFFFFF;
+            border-radius: 2.5rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 4px solid #E5E7EB;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-height: 98vh;
+            overflow-y: auto;
+            position: relative;
+            scrollbar-width: none;
+            padding: 1.5rem;
+        }
+        .glass::-webkit-scrollbar { display: none; }
+
+        @media (min-width: 768px) {
+            .glass { padding: 2.5rem; }
+        }
+
+        .btn-game {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+        }
+
+        .btn-game:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+        }
+
+        /* Pergunta com fonte refinada e cor azul escuro */
+        #question-text {
+            font-weight: 500;
+            color: #1E3A8A; /* Azul Escuro */
+        }
+
+        .option-btn {
+            background: #F9FAFB;
+            border: 3px solid #D1D5DB;
+            text-align: left;
+            padding: 1rem 1.25rem;
+            border-radius: 1.25rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            width: 100%;
+            line-height: 1.4;
+        }
+
+        @media (min-width: 768px) {
+            .option-btn { font-size: 1.2rem; padding: 1rem 1.75rem; }
+        }
+
+        .option-btn.correct {
+            background: #10B981 !important;
+            border-color: #047857 !important;
+            color: white !important;
+        }
+
+        .option-btn.wrong {
+            background: #EF4444 !important;
+            border-color: #B91C1C !important;
+            color: white !important;
+        }
+
+        #close-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 2000;
+            background: #DC2626;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 #991B1B;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 2.5rem;
+            width: 100%;
+            max-width: 550px;
+            padding: 2rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            border: 8px solid #E5E7EB;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .huge-lamp {
+            display: inline-block;
+            font-size: 5rem;
+            animation: float 4s infinite ease-in-out;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
+        }
+        @media (min-width: 768px) {
+            .huge-lamp { font-size: 7rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="close-btn" onclick="closeGame()">✕</div>
+
+    <div class="w-full max-w-2xl px-4 py-4">
+        
+        <!-- TELA INICIAL -->
+        <div id="screen-start" class="glass text-center flex flex-col items-center justify-center">
+            <div class="huge-lamp mb-2">💡</div>
+            <h1 class="text-3xl md:text-5xl text-blue-900 mb-4 uppercase tracking-tight leading-tight">Consumo Consciente</h1>
+            
+            <p class="text-lg md:text-2xl text-gray-700 font-bold leading-relaxed mb-8 max-w-lg">
+                Responda às perguntas e teste seus conhecimentos sobre como economizar energia.
+            </p>
+
+            <button onclick="startGame()" class="btn-game bg-blue-600 hover:bg-blue-700 text-white font-game text-xl md:text-2xl py-4 px-10 rounded-2xl w-full max-w-[200px] shadow-lg">
+                INICIAR
+            </button>
+        </div>
+
+        <!-- TELA DO QUIZ -->
+        <div id="screen-quiz" class="glass hidden">
+            <div class="flex justify-between items-center mb-6 bg-gray-50 p-4 rounded-xl border-2 border-gray-100">
+                <div class="text-center">
+                    <p class="text-[10px] font-black uppercase text-gray-400">Pontos</p>
+                    <p id="score-display" class="font-game text-xl md:text-2xl text-emerald-600">000</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] font-black uppercase text-gray-400">Tempo</p>
+                    <p id="timer-display" class="font-game text-xl md:text-2xl text-blue-600">00:00</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] font-black uppercase text-gray-400">Questão</p>
+                    <p id="q-counter" class="font-game text-xl md:text-2xl text-rose-500">1/20</p>
+                </div>
+            </div>
+
+            <div id="question-container" class="mb-6">
+                <div id="difficulty-tag" class="inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase mb-3"></div>
+                <!-- Tamanho da fonte da pergunta reduzido ligeiramente (xl/2xl) -->
+                <h2 id="question-text" class="text-xl md:text-2xl leading-tight tracking-wide"></h2>
+            </div>
+
+            <div id="options-grid" class="space-y-4">
+                <!-- As opções entram aqui sem scroll interno -->
+            </div>
+        </div>
+
+        <!-- TELA FINAL -->
+        <div id="screen-result" class="glass text-center hidden flex flex-col items-center justify-center">
+            <div id="result-emoji" class="text-7xl md:text-9xl mb-6">🏆</div>
+            <h1 id="result-title" class="text-3xl md:text-5xl text-blue-900 mb-4 font-game leading-tight"></h1>
+            <p id="result-message" class="text-xl md:text-2xl text-gray-600 mb-8 leading-relaxed px-4"></p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8 w-full max-w-md">
+                <div class="bg-gray-50 p-4 rounded-2xl border-2">
+                    <p class="text-xs uppercase font-black text-gray-400 mb-1">Pontos</p>
+                    <p id="final-score" class="font-game text-3xl md:text-5xl text-emerald-600">0</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-2xl border-2">
+                    <p class="text-xs uppercase font-black text-gray-400 mb-1">Tempo</p>
+                    <p id="final-time" class="font-game text-3xl md:text-5xl text-blue-600">00:00</p>
+                </div>
+            </div>
+
+            <button onclick="restartGame()" class="btn-game bg-blue-600 hover:bg-blue-700 text-white font-game text-2xl py-5 px-10 rounded-2xl w-full max-w-[280px]">
+                RECOMEÇAR 🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Feedback -->
+    <div id="modal-feedback" class="modal-overlay">
+        <div class="modal-content">
+            <div id="feedback-icon" class="text-7xl mb-4"></div>
+            <h3 id="feedback-msg" class="text-3xl md:text-4xl mb-4"></h3>
+            <p id="feedback-rationale" class="text-xl md:text-2xl text-gray-700 mb-8 leading-relaxed font-medium"></p>
+            <button onclick="nextQuestion()" class="btn-game bg-gray-900 text-white font-game text-2xl py-5 px-8 rounded-xl w-full">
+                CONTINUAR ➔
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Qual hábito doméstico é citado como um dos principais motivos de contas altas?",
+                difficulty: "easy", points: 10,
+                options: [
+                    { text: "Banhos muito demorados 🚿", correct: true, rationale: "O chuveiro gasta muita energia para aquecer a água rapidamente." },
+                    { text: "Lavar as mãos 🧼", correct: false, rationale: "Lavar as mãos consome pouca energia e é essencial." },
+                    { text: "Dormir de janela aberta 🪟", correct: false, rationale: "Isso não afeta o consumo elétrico doméstico nos temas estudados." },
+                    { text: "Ler livros físicos 📚", correct: false, rationale: "Livros não utilizam eletricidade para serem lidos." }
+                ]
+            },
+            {
+                question: "O que a 'luzinha vermelha' (Standby) nos aparelhos indica?",
+                difficulty: "easy", points: 10,
+                options: [
+                    { text: "Desligado da tomada 🔌", correct: false, rationale: "Se a luz brilha, ele ainda está puxando energia da rede elétrica." },
+                    { text: "Em modo de espera: gasto de energia ⚡", correct: true, rationale: "É o chamado 'consumo vampiro', que gasta energia o dia todo." },
+                    { text: "Aparelho com defeito ⚠️", correct: false, rationale: "É apenas o sinal de que ele está pronto para ligar rápido." },
+                    { text: "Economizando 100% 🚫", correct: false, rationale: "Aparelhos em standby continuam registrando consumo." }
+                ]
+            },
+            {
+                question: "O que significa a sigla 'kWh' que aparece na conta de luz?",
+                difficulty: "medium", points: 20,
+                options: [
+                    { text: "Kilos de Watts de Hoje 📅", correct: false, rationale: "A sigla é uma medida técnica oficial de consumo." },
+                    { text: "Quilowatt-hora ⚡", correct: true, rationale: "É a unidade padrão que mede quanta energia seus aparelhos usaram." },
+                    { text: "Watts por Hora 🕒", correct: false, rationale: "O termo oficial correto é Quilowatt-hora." },
+                    { text: "Kit de Watts em Horário 🛠️", correct: false, rationale: "Essa definição não existe no mundo da eletricidade." }
+                ]
+            },
+            {
+                question: "O modo 'Standby' pode representar quanto na conta de luz mensal?",
+                difficulty: "medium", points: 20,
+                options: [
+                    { text: "Cerca de 1% 📉", correct: false, rationale: "O valor acumulado no mês é bem maior do que parece." },
+                    { text: "Aproximadamente 12% ⚡", correct: true, rationale: "Todos os aparelhos em standby somados podem chegar a 12% da conta!" },
+                    { text: "Cerca de 50% 📊", correct: false, rationale: "É um valor alto, mas não chega a metade da conta total." },
+                    { text: "Não representa gasto 🚫", correct: false, rationale: "Pequenas luzes acesas gastam energia de forma contínua." }
+                ]
+            },
+            {
+                question: "Qual o horário de 'Pico' de consumo de energia no Brasil?",
+                difficulty: "medium", points: 20,
+                options: [
+                    { text: "08:00 às 11:00 ☕", correct: false, rationale: "Pela manhã o consumo não é o momento mais crítico da rede." },
+                    { text: "17:30 às 20:30 🕒", correct: true, rationale: "É quando quase todos ligam chuveiros e luzes simultaneamente." },
+                    { text: "12:00 às 14:00 🍕", correct: false, rationale: "Horário de almoço com consumo moderado." },
+                    { text: "23:00 às 02:00 🌙", correct: false, rationale: "Este é o período de menor consumo da rede elétrica." }
+                ]
+            },
+            {
+                question: "Por que devemos usar pouca energia no horário de pico?",
+                difficulty: "medium", points: 20,
+                options: [
+                    { text: "Porque a rede elétrica fica sobrecarregada ⚡", correct: true, rationale: "Muitos aparelhos ligados juntos exigem demais das usinas e cabos." },
+                    { text: "Para a luz não queimar 💡", correct: false, rationale: "O problema real é a sobrecarga, não queima de lâmpadas." },
+                    { text: "Para poder dormir melhor 😴", correct: false, rationale: "Não há relação direta entre o pico e o sono." },
+                    { text: "Aparelhos quebram sozinhos 🛠️", correct: false, rationale: "O risco maior é de falta de luz para todos (apagões)." }
+                ]
+            },
+            {
+                question: "Qual a vantagem da lâmpada LED sobre a Incandescente?",
+                difficulty: "hard", points: 30,
+                options: [
+                    { text: "A LED é mais bonita 🎨", correct: false, rationale: "A principal vantagem da LED é a eficiência técnica." },
+                    { text: "A LED é muito mais eficiente e econômica 🌟", correct: true, rationale: "Ela entrega o mesmo brilho gastando quase nada de energia." },
+                    { text: "A Incandescente dura mais 🕰️", correct: false, rationale: "A lâmpada incandescente queima muito mais rápido que a LED." },
+                    { text: "A LED esquenta o ambiente ♨️", correct: false, rationale: "A LED é fria. Quem esquenta o ambiente é a incandescente." }
+                ]
+            },
+            {
+                question: "Quanto da energia da lâmpada incandescente vira calor e é desperdiçada?",
+                difficulty: "hard", points: 30,
+                options: [
+                    { text: "Apenas 10% 📉", correct: false, rationale: "Ela é muito ineficiente, o desperdício é gigante." },
+                    { text: "Cerca de 90% ♨️", correct: true, rationale: "Ela gasta 90% aquecendo e só 10% iluminando o local." },
+                    { text: "Não há desperdício 🚫", correct: false, rationale: "Quase tudo o que ela consome vira calor inútil." },
+                    { text: "Cerca de 50% ⚖️", correct: false, rationale: "O desperdício real é muito maior, chegando a 90%." }
+                ]
+            },
+            {
+                question: "Como economizar energia ajuda a realizar objetivos no futuro?",
+                difficulty: "medium", points: 20,
+                options: [
+                    { text: "Permite acumular dinheiro para investir 🚀", correct: true, rationale: "Pequenas economias geram grandes reservas com o passar do tempo." },
+                    { text: "Faz as lâmpadas durarem para sempre 💡", correct: false, rationale: "O hábito ajuda na vida útil, mas o foco é a disciplina financeira." },
+                    { text: "Não ajuda a realizar sonhos ❌", correct: false, rationale: "O planejamento pessoal é o caminho mais seguro para o futuro." },
+                    { text: "Dinheiro guardado desaparece rápido 💸", correct: false, rationale: "Dinheiro poupado e investido aumenta sua segurança." }
+                ]
+            },
+            {
+                question: "Ao sair de uma sala ou quarto vazio, o que se deve fazer?",
+                difficulty: "easy", points: 10,
+                options: [
+                    { text: "Deixar a luz para quem chegar 🕯️", correct: false, rationale: "Se não há ninguém no local, a luz deve ficar apagada." },
+                    { text: "Apagar a luz para evitar desperdício 🚪", correct: true, rationale: "Esta é a ação número 1 de um consumidor consciente." },
+                    { text: "Ligar o rádio 📻", correct: false, rationale: "Aparelhos não devem ficar ligados onde não há pessoas." },
+                    { text: "Fechar apenas a porta 🚪", correct: false, rationale: "O mais importante é desligar a fonte de consumo de energia." }
+                ]
+            },
+            {
+                question: "O dinheiro poupado na conta de luz pode se tornar o quê?",
+                difficulty: "medium", points: 20,
+                options: [
+                    { text: "Papel velho 📄", correct: false, rationale: "Dinheiro poupado é recurso valioso para o seu futuro." },
+                    { text: "Uma poupança para sonhos e emergências 💰", correct: true, rationale: "Economia doméstica é a base para formar seu patrimônio." },
+                    { text: "Luz infinita ⚡", correct: false, rationale: "Energia deve ser usada com sabedoria, não desperdiçada." },
+                    { text: "Mais contas 📉", correct: false, rationale: "Economizar serve exatamente para reduzir as dívidas mensais." }
+                ]
+            },
+            {
+                question: "Se uma conta caiu de R$ 150 para R$ 120, quanto foi poupado?",
+                difficulty: "hard", points: 30,
+                options: [
+                    { text: "R$ 10 💵", correct: false, rationale: "Cálculo de subtração incorreto." },
+                    { text: "R$ 30 💵", correct: true, rationale: "Correto! 150 menos 120 resulta em 30 reais de economia." },
+                    { text: "R$ 50 💵", correct: false, rationale: "A economia mensal real foi de 30 reais." },
+                    { text: "R$ 5 💵", correct: false, rationale: "O valor poupado foi muito maior do que este." }
+                ]
+            },
+            {
+                question: "O que faz o dinheiro guardado aumentar sozinho no tempo?",
+                difficulty: "hard", points: 30,
+                options: [
+                    { text: "Investimentos com juros compostos 📈", correct: true, rationale: "Juros sobre juros fazem o dinheiro trabalhar para você." },
+                    { text: "O colchão 🛏️", correct: false, rationale: "Dinheiro guardado em casa perde valor para a inflação." },
+                    { text: "Gastar tudo em doces 💸", correct: false, rationale: "O consumo imediato impede o crescimento futuro da sua poupança." },
+                    { text: "Dinheiro guardado não aumenta sozinho 🚫", correct: false, rationale: "Investimentos seguros multiplicam o valor poupado." }
+                ]
+            },
+            {
+                question: "Para que serve monitorar o consumo com gráficos?",
+                difficulty: "medium", points: 20,
+                options: [
+                    { text: "Para desenhar na escola 🎨", correct: false, rationale: "Gráficos são ferramentas de análise financeira sérias." },
+                    { text: "Comparar meses e corrigir hábitos ruins 📊", correct: true, rationale: "Ajuda a identificar onde os desperdícios estão ocorrendo." },
+                    { text: "Saber nomes de aparelhos 🏷️", correct: false, rationale: "O foco é entender para onde vai o seu dinheiro mensal." },
+                    { text: "Não tem nenhuma utilidade ❌", correct: false, rationale: "É essencial para o planejamento financeiro doméstico." }
+                ]
+            },
+            {
+                question: "Consumo Consciente na prática significa:",
+                difficulty: "hard", points: 30,
+                options: [
+                    { text: "Não usar nada de eletricidade 🕯️", correct: false, rationale: "É usar com equilíbrio e inteligência, não parar de usar." },
+                    { text: "Usar só o necessário, sem desperdícios 🧠", correct: true, rationale: "Aproveitar o conforto da energia sem jogar dinheiro fora." },
+                    { text: "Ligar tudo ao mesmo tempo ⚡", correct: false, rationale: "Isso é o oposto da consciência energética estudada." },
+                    { text: "Esperar os vizinhos economizarem 🤷", correct: false, rationale: "Cada um é responsável pelo seu próprio impacto de consumo." }
+                ]
+            },
+            {
+                question: "Por que as crianças devem economizar luz na escola?",
+                difficulty: "easy", points: 10,
+                options: [
+                    { text: "Porque é um ótimo hábito de economia 👫", correct: true, rationale: "Bons hábitos nas salas de aula ajudam a escola toda a poupar." },
+                    { text: "Para ganhar estrelinhas 📝", correct: false, rationale: "A recompensa real é a preservação dos recursos do planeta." },
+                    { text: "Para fiscalizar os colegas 👮", correct: false, rationale: "O objetivo é ensinar pelo exemplo e colaborar com todos." },
+                    { text: "Para evitar as tarefas 📖", correct: false, rationale: "A economia é uma lição prática que faz parte do aprendizado." }
+                ]
+            },
+            {
+                question: "Qual dessas atitudes NÃO ajuda na economia?",
+                difficulty: "easy", points: 10,
+                options: [
+                    { text: "Apagar as luzes ao sair 💡", correct: false, rationale: "Esta atitude ajuda muito na redução do gasto mensal." },
+                    { text: "Manter o carregador na tomada sem celular 📱", correct: true, rationale: "O carregador sozinho continua consumindo energia silenciosamente." },
+                    { text: "Tomar banhos rápidos 🚿", correct: false, rationale: "Isso economiza água e muita energia elétrica de aquecimento." },
+                    { text: "Trocar lâmpadas comuns por LED 🌟", correct: false, rationale: "Esta mudança tecnológica reduz drasticamente o consumo." }
+                ]
+            },
+            {
+                question: "A economia de energia gera o quê além de dinheiro?",
+                difficulty: "hard", points: 30,
+                options: [
+                    { text: "Fome 🍕", correct: false, rationale: "Não tem relação nenhuma com o consumo elétrico." },
+                    { text: "Disciplina e consciência financeira 🧠", correct: true, rationale: "Forma cidadãos mais preparados para planejar a vida." },
+                    { text: "Tristeza e falta de luz 😢", correct: false, rationale: "Pelo contrário, gera satisfação por agir corretamente." },
+                    { text: "Nada de especial 😐", correct: false, rationale: "Promove valores essenciais para um futuro sustentável." }
+                ]
+            },
+            {
+                question: "Como descobrir por que a conta subiu inesperadamente?",
+                difficulty: "medium", points: 20,
+                options: [
+                    { text: "Ignorando o problema 🙈", correct: false, rationale: "Ignorar faz o desperdício continuar e o prejuízo crescer." },
+                    { text: "Analisando hábitos e kWh gastos no mês 📋", correct: true, rationale: "É preciso investigar quais aparelhos ou hábitos gastam mais." },
+                    { text: "Cortando a fiação da casa 🚫", correct: false, rationale: "Ação perigosa e totalmente ineficaz para o problema." },
+                    { text: "Aumentando o consumo 📈", correct: false, rationale: "Isso apenas tornará a situação financeira muito pior." }
+                ]
+            },
+            {
+                question: "Economizar recursos preserva o futuro de quem?",
+                difficulty: "hard", points: 30,
+                options: [
+                    { text: "Só das grandes empresas 🏦", correct: false, rationale: "Preserva o planeta para toda a humanidade." },
+                    { text: "Das próximas gerações e o meio ambiente 🌍", correct: true, rationale: "Menos desperdício hoje garante um mundo melhor amanhã." },
+                    { text: "Apenas dos robôs do futuro 🤖", correct: false, rationale: "O foco é a sobrevivência e bem-estar dos seres humanos." },
+                    { text: "De ninguém em especial 💰", correct: false, rationale: "Sustentabilidade é a base da nossa vida no planeta." }
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timerSeconds = 0;
+        let timerInterval;
+        let isAnswered = false;
+
+        function startGame() {
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.remove('hidden');
+            loadQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                const secs = (timerSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            isAnswered = false;
+            const q = questions[currentQuestionIndex];
+            
+            document.getElementById('q-counter').innerText = `${currentQuestionIndex + 1}/20`;
+            
+            const diffTag = document.getElementById('difficulty-tag');
+            diffTag.innerText = q.difficulty === 'easy' ? '+10 pontos' : q.difficulty === 'medium' ? '+20 pontos' : '+30 pontos';
+            diffTag.className = `inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase mb-3 ${
+                q.difficulty === 'easy' ? 'bg-green-100 text-green-700' : 
+                q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+            }`;
+
+            document.getElementById('question-text').innerText = q.question;
+            
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn btn-game';
+                btn.innerText = opt.text;
+                btn.onclick = () => selectOption(idx, btn);
+                optionsGrid.appendChild(btn);
+            });
+            
+            // Faz scroll para o topo do card ao trocar de questão
+            document.querySelector('.glass').scrollTop = 0;
+        }
+
+        function selectOption(index, btn) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const q = questions[currentQuestionIndex];
+            const isCorrect = q.options[index].correct;
+            
+            const modal = document.getElementById('modal-feedback');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackMsg = document.getElementById('feedback-msg');
+            const feedbackRationale = document.getElementById('feedback-rationale');
+
+            if (isCorrect) {
+                score += q.points;
+                btn.classList.add('correct');
+                feedbackIcon.innerText = "🤩";
+                feedbackMsg.innerText = "PARABÉNS!";
+                feedbackMsg.style.color = "#10B981";
+            } else {
+                btn.classList.add('wrong');
+                feedbackIcon.innerText = "🧐";
+                feedbackMsg.innerText = "QUASE LÁ...";
+                feedbackMsg.style.color = "#EF4444";
+                
+                const buttons = document.querySelectorAll('.option-btn');
+                q.options.forEach((o, i) => { if (o.correct) buttons[i].classList.add('correct'); });
+            }
+
+            document.getElementById('score-display').innerText = score.toString().padStart(3, '0');
+            feedbackRationale.innerText = q.options[index].rationale;
+            modal.classList.add('active');
+        }
+
+        function nextQuestion() {
+            document.getElementById('modal-feedback').classList.remove('active');
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 300);
+        }
+
+        function showResults() {
+            clearInterval(timerInterval);
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+
+            const finalScore = document.getElementById('final-score');
+            const finalTime = document.getElementById('final-time');
+            const resultEmoji = document.getElementById('result-emoji');
+            const resultTitle = document.getElementById('result-title');
+            const resultMessage = document.getElementById('result-message');
+
+            finalScore.innerText = score;
+            finalTime.innerText = document.getElementById('timer-display').innerText;
+
+            if (score >= 380) {
+                resultEmoji.innerText = "🥇"; resultTitle.innerText = "Economista de Elite!"; resultMessage.innerText = "Incrível! Você domina todos os conceitos de economia e eficiência elétrica.";
+            } else if (score >= 250) {
+                resultEmoji.innerText = "⭐"; resultTitle.innerText = "Guardião da Energia!"; resultMessage.innerText = "Excelente! Você tem ótimos hábitos e consciência sobre o seu futuro financeiro.";
+            } else {
+                resultEmoji.innerText = "💡"; resultTitle.innerText = "Vamos Praticar?"; resultMessage.innerText = "A economia de energia é uma jornada. Revise o material para bater novos recordes!";
+            }
+        }
+
+        function restartGame() {
+            location.reload();
+        }
+
+        function closeGame() {
+            if (confirm("Deseja sair e reiniciar o quiz? Todo o progresso será perdido.")) location.reload();
+        }
+    </script>
+</body>
+</html>

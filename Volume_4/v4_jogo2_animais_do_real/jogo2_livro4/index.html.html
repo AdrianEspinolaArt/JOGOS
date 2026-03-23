@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz: Animais do Real</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #5a9fd4 0%, #3574ba 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1f2937;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: #ffffff;
+            border: 6px solid #e9e72b;
+            box-shadow: 0 20px 0 #c9c500;
+        }
+
+        /* Contêiner da Cédula Responsivo */
+        .bill-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 320px; /* Tamanho ideal para horizontal */
+            aspect-ratio: 2 / 1; /* Proporção 2:1 para notas horizontais */
+            margin: 0 auto 2rem;
+        }
+
+        .bill-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .bill-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .bill-front, .bill-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            overflow: hidden;
+            background-color: #e5e7eb; /* Fundo cinza caso imagem falhe */
+        }
+
+        .bill-back {
+            transform: rotateY(180deg);
+        }
+
+        .bill-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Garante que a nota caiba inteira */
+            display: block;
+        }
+
+        .option-btn {
+            transition: all 0.2s;
+            border-bottom: 4px solid #e5e7eb;
+            touch-action: manipulation;
+        }
+
+        .option-btn:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+
+        .correct {
+            background-color: #10b981 !important;
+            color: white !important;
+            border-color: #064e3b !important;
+        }
+
+        .incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #7f1d1d !important;
+        }
+
+        .btn-main {
+            background: #e9e72b;
+            color: #3574ba;
+            border-bottom: 6px solid #c9c500;
+            transition: all 0.1s;
+        }
+
+        .btn-main:active {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-4">
+
+    <div id="game-container" class="w-full max-w-md glass-card rounded-[2.5rem] p-6 sm:p-10 relative">
+        
+        <button onclick="resetToStart()" class="absolute top-4 right-6 text-gray-300 hover:text-red-500 transition-colors text-4xl font-black z-50">
+            &times;
+        </button>
+
+        <div id="start-screen" class="text-center fade-in">
+            <div class="text-[120px] leading-none mb-4 filter drop-shadow-lg">🦜</div>
+            
+            <h1 class="text-3xl font-black mb-2 leading-none uppercase" style="color: #3574ba;">
+                Animais do<br><span class="text-4xl" style="color: #e9e72b;">Real</span>
+            </h1>
+            <p class="text-gray-500 mb-8 font-bold text-sm">Aprenda brincando com as nossas notas!</p>
+            
+            <div class="rounded-[2rem] p-6 mb-8 text-left" style="background: #eef6ff; border: 4px solid #a8cce8;">
+                <h3 class="font-black mb-4 flex items-center gap-2 text-lg uppercase" style="color: #3574ba;">
+                    Como Jogar:
+                </h3>
+                <ul class="space-y-4 text-blue-900 font-semibold text-sm">
+                    <li class="flex gap-3">
+                        <span class="bg-blue-200 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                        <span>Veja o valor na frente da nota.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="bg-blue-200 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                        <span><strong>Clique no animal</strong> que está no verso dela!</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="bg-blue-200 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                        <span>Ao responder, a nota vira para mostrar o animal!</span>
+                    </li>
+                </ul>
+            </div>
+
+            <button onclick="startQuiz()" class="btn-main w-full py-5 rounded-[1.5rem] font-black text-2xl uppercase tracking-tighter">
+                INICIAR
+            </button>
+        </div>
+
+        <div id="quiz-screen" class="hidden fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <div id="score-display" class="px-4 py-1 rounded-full font-black text-xs uppercase shadow-sm" style="background: #e9e72b; color: #3574ba;">
+                    Pontos: 0
+                </div>
+                <div class="text-xs font-black uppercase" style="color: #3574ba;">
+                    Nota <span id="current-q-num">1</span> de 7
+                </div>
+            </div>
+
+            <div class="bill-container">
+                <div id="bill-card" class="bill-inner">
+                    <div class="bill-front">
+                        <!-- Adicionei tratamento de erro (onerror) -->
+                        <img id="bill-front-img" src="" alt="Frente da nota" class="bill-img" onerror="handleImageError(this)">
+                    </div>
+                    <div class="bill-back">
+                        <!-- Adicionei tratamento de erro (onerror) -->
+                        <img id="bill-back-img" src="" alt="Verso da nota" class="bill-img" onerror="handleImageError(this)">
+                    </div>
+                </div>
+            </div>
+
+            <h2 id="question-text" class="text-lg font-black text-gray-800 text-center mb-6 leading-tight">
+                Qual animal está no verso?
+            </h2>
+
+            <div id="options-container" class="grid grid-cols-1 gap-3 mb-6"></div>
+
+            <div id="feedback-section" class="hidden mb-6 p-4 rounded-2xl bg-green-50 border-4 border-green-200 fade-in">
+                <p id="rationale-text" class="text-green-900 text-sm font-bold leading-snug"></p>
+            </div>
+
+            <div class="flex items-center justify-end">
+                <button id="next-btn" class="hidden btn-main px-8 py-3 rounded-xl font-black uppercase text-sm">
+                    CONTINUAR
+                </button>
+            </div>
+        </div>
+
+        <div id="results-screen" class="hidden text-center py-4 fade-in">
+            <div id="final-emoji" class="text-7xl mb-4">🏆</div>
+            <h2 id="final-title" class="text-3xl font-black mb-2 uppercase" style="color: #3574ba;">Incrível!</h2>
+            <p id="final-message" class="text-gray-500 mb-8 font-bold">Você conhece tudo sobre o nosso dinheiro!</p>
+            
+            <div class="flex justify-center gap-4 mb-10">
+                <div class="text-white p-5 rounded-[2rem] flex-1" style="background: #3574ba;">
+                    <p class="text-[10px] uppercase font-black opacity-70">Acertos</p>
+                    <p id="final-score" class="text-4xl font-black">0</p>
+                </div>
+                <div class="p-5 rounded-[2rem] flex-1" style="background: #e9e72b; color: #3574ba;">
+                    <p class="text-[10px] uppercase font-black opacity-70">Total</p>
+                    <p class="text-4xl font-black">7</p>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="btn-main w-full py-5 rounded-[1.5rem] font-black text-xl uppercase">
+                Jogar de Novo
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const gameData = [
+            { id: "2", v: "2,00",  a: "Tartaruga-marinha", r: "A tartaruga-marinha simboliza a preservação da fauna aquática brasileira." },
+            { id: "5", v: "5,00",  a: "Garça",             r: "A garça-branca-grande representa as regiões alagadas do Brasil." },
+            { id: "10", v: "10,00", a: "Arara-vermelha",    r: "A arara-vermelha-grande é uma das aves mais exuberantes da nossa fauna e ilustra a nota de R$ 10,00." }, 
+            { id: "20", v: "20,00", a: "Mico-leão-dourado", r: "O mico-leão-dourado é o símbolo da luta pela preservação das espécies." },
+            { id: "50", v: "50,00", a: "Onça-pintada",      r: "A onça-pintada é a rainha da nossa fauna e está na nota de R$ 50,00." },
+            { id: "100", v: "100,00", a: "Garoupa",           r: "A garoupa é um peixe comum no litoral brasileiro." },
+            { id: "200", v: "200,00", a: "Lobo-guará",        r: "O lobo-guará foi o último animal a entrar na nossa família de notas." }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let answered = false;
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        // Função INTELIGENTE para tentar carregar a imagem
+        function handleImageError(img) {
+            // Evita loop infinito
+            if (img.getAttribute('data-retry')) {
+                // Se já tentou trocar a extensão e falhou de novo, mostra mensagem
+                img.style.display = 'none';
+                const div = document.createElement('div');
+                div.className = 'w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs p-2 text-center font-bold leading-tight';
+                div.innerHTML = `⚠️<br>${img.alt}<br>não encontrada`;
+                img.parentNode.appendChild(div);
+                return;
+            }
+
+            img.setAttribute('data-retry', 'true');
+
+            // Se falhou carregar .jpg, tenta .png (e vice-versa)
+            if (img.src.includes('.jpg')) {
+                img.src = img.src.replace('.jpg', '.png');
+            } else if (img.src.includes('.png')) {
+                img.src = img.src.replace('.png', '.jpg');
+            }
+        }
+
+        function renderQuestion() {
+            answered = false;
+            const q = gameData[currentIdx];
+            
+            const billCard = document.getElementById('bill-card');
+            const frontImg = document.getElementById('bill-front-img');
+            const backImg = document.getElementById('bill-back-img');
+
+            // Limpa estados anteriores (placeholders de erro)
+            const placeholders = document.querySelectorAll('.bill-front div, .bill-back div');
+            placeholders.forEach(el => el.remove());
+            frontImg.style.display = 'block';
+            backImg.style.display = 'block';
+            frontImg.removeAttribute('data-retry');
+            backImg.removeAttribute('data-retry');
+
+            billCard.classList.remove('is-flipped');
+            
+            // Agora carrega .jpg por padrão
+            frontImg.src = q.id + "_frente.jpg";
+            backImg.src = q.id + "_verso.jpg";
+
+            document.getElementById('current-q-num').innerText = currentIdx + 1;
+            document.getElementById('question-text').innerText = `Qual animal estampa o verso da cédula de R$ ${q.v}?`;
+            document.getElementById('feedback-section').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const options = gameData.map(item => item.a);
+            const filtered = options.filter(o => o !== q.a);
+            const shuffled = [q.a, ...filtered.sort(() => 0.5 - Math.random()).slice(0, 3)].sort(() => 0.5 - Math.random());
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            shuffled.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full py-4 px-6 rounded-2xl bg-gray-100 text-gray-800 font-bold text-sm text-left';
+                btn.innerText = opt;
+                btn.onclick = () => check(opt, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function check(choice, btn) {
+            if (answered) return;
+            answered = true;
+            const q = gameData[currentIdx];
+            const isCorrect = choice === q.a;
+
+            document.getElementById('bill-card').classList.add('is-flipped');
+
+            if (isCorrect) {
+                score++;
+                btn.classList.add('correct');
+                document.getElementById('score-display').innerText = `Pontos: ${score}`;
+            } else {
+                btn.classList.add('incorrect');
+                Array.from(document.getElementById('options-container').children).forEach(b => {
+                    if (b.innerText === q.a) b.classList.add('correct');
+                });
+            }
+
+            const feedbackText = isCorrect ? `<strong>Muito bem!</strong> ${q.r}` : `<strong>Ops!</strong> ${q.r}`;
+            document.getElementById('rationale-text').innerHTML = feedbackText;
+            document.getElementById('feedback-section').classList.remove('hidden');
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        document.getElementById('next-btn').onclick = () => {
+            currentIdx++;
+            if (currentIdx < gameData.length) renderQuestion();
+            else showFinal();
+        };
+
+        function showFinal() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+
+            const emoji = document.getElementById('final-emoji');
+            const title = document.getElementById('final-title');
+            const message = document.getElementById('final-message');
+
+            if (score === 7) {
+                emoji.innerText = "🏆";
+                title.innerText = "Mestre do Real!";
+                message.innerText = "Incrível! Você conhece tudo sobre o nosso dinheiro!";
+            } else if (score >= 4) {
+                emoji.innerText = "🌟";
+                title.innerText = "Muito Bom!";
+                message.innerText = "Você conhece as cédulas muito bem, mas pode aprender mais!";
+            } else {
+                emoji.innerText = "📚";
+                title.innerText = "Continue Estudando!";
+                message.innerText = "Que tal olhar para as notas de novo e tentar mais uma vez?";
+            }
+        }
+
+        function resetToStart() {
+            if (confirm("Quer mesmo sair?")) location.reload();
+        }
+    </script>
+</body>
+</html>

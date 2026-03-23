@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Puzzle das Formigas</title>
+    
+    <!-- Importando uma fonte divertida do Google Fontsaa -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+           --primary: #da5d64;
+            --primary-dark: #d92f4f;
+            --secondary: #1b9638;
+            --bg-gradient: linear-gradient(135deg, #6cb52d 0%, #1b9638 100%);
+            --board-w: 600px;
+            --board-h: 450px;
+            --bg-image: none; 
+        }
+
+        body {
+            font-family: 'Fredoka One', cursive, sans-serif;
+            /* Fundo Amarelo Vibrante */
+            background: var(--bg-gradient);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--primary);
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none; 
+            touch-action: pan-y;
+            text-shadow: none; /* Sem sombra no texto geral para ficar limpo no amarelo */
+        }
+
+        h1 { 
+            margin: 15px 0 5px; 
+            font-size: 2rem; 
+            text-align: center;
+            color:var(--primary-dark);
+            /* Sombra Azul forte para destacar o título branco no fundo amarelo */
+            
+            letter-spacing: 1px;
+            line-height: 1.1;
+            padding: 0 10px;
+        }
+        h1.game-title {
+            margin: 0;
+            color: white;
+            font-size: clamp(1.8rem, 6vw, 3rem);
+        }
+
+        /* Área do Timer */
+        #timer {
+            font-size: 1.5rem;
+            background: var(--primary);
+            color: #fff;
+            padding: 5px 20px;
+            border-radius: 50px;
+            margin: 5px 0 10px;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            text-shadow: none;
+        }
+
+        .instructions {
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 15px;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 1rem;
+            text-align: center;
+            max-width: 90%;
+            text-shadow: none;
+            border: 3px solid var(--primary);
+        }
+
+        /* Tela de seleção de imagem */
+        #select-screen {
+            background: white;
+            border-radius: 30px;
+            border: 6px solid var(--primary);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            padding: 30px;
+            text-align: center;
+            width: 95%;
+            max-width: 700px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        #select-screen h2 {
+            color: var(--primary);
+            font-size: 1.6rem;
+            margin: 0 0 20px;
+            text-shadow: none;
+        }
+
+        .thumb-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .thumb-card {
+            width: 180px;
+            cursor: pointer;
+            border: 5px solid #e0e0e0;
+            border-radius: 16px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .thumb-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 0 rgba(0,0,0,0.12);
+        }
+        .thumb-card:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0,0,0,0.1); }
+
+        .thumb-card img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            display: block;
+        }
+        .thumb-card .thumb-label {
+            padding: 8px;
+            font-size: 0.95rem;
+            color: var(--primary);
+            text-shadow: none;
+        }
+
+        @media (max-width: 500px) {
+            .thumb-card { width: 140px; }
+            .thumb-card img { height: 100px; }
+        }
+
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        /* --- TABULEIRO --- */
+        #board {
+            position: relative;
+            width: var(--board-w);
+            height: var(--board-h);
+            background-image: var(--bg-image);
+            background-size: 100% 100%;
+            border: 6px solid var(--primary);
+            border-radius: 15px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            box-shadow: 0 10px 0 rgba(0,0,0,0.1);
+            touch-action: none; 
+            background-color: rgba(255,255,255,0.4);
+        }
+
+        #board::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.6); 
+            z-index: 0;
+            display: var(--guide-display, none);
+        }
+
+        .slot {
+            width: 100%;
+            height: 100%;
+            border: 1px dashed rgba(218, 93, 100, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- PEÇAS --- */
+        #tray {
+            width: 95%;
+            max-width: 600px;
+            min-height: 140px;
+            background: rgba(255,255,255,0.4);
+            border: 4px solid var(--primary);
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .piece {
+            background-image: var(--bg-image);
+            background-size: var(--board-w) var(--board-h);
+            border: 3px solid #fff;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            border-radius: 10px;
+            touch-action: none;
+            transition: transform 0.2s;
+            background-color: #eee;
+        }
+
+        .piece.selected {
+            border: 4px solid var(--primary);
+            transform: scale(1.1);
+            z-index: 100;
+            box-shadow: 0 0 20px var(--primary);
+            animation: bounce 0.5s infinite alternate;
+        }
+        
+        @keyframes bounce { from { transform: scale(1.1); } to { transform: scale(1.15); } }
+
+        .piece.placed {
+            border: none;
+            box-shadow: none;
+            pointer-events: none;
+        }
+
+        .locked-play .slot,
+        .locked-play .piece {
+            pointer-events: none;
+        }
+
+        .locked-play #board,
+        .locked-play #tray {
+            opacity: 0.75;
+        }
+
+        button {
+            padding: 15px 35px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.3rem;
+            background-color: var(--primary); /* Azul */
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--primary-dark); /* Sombra Azul escura */
+            transition: transform 0.1s;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+            border: 2px solid #fff; 
+        }
+        
+        button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 var(--primary-dark);
+        }
+
+        /* Modal de Vitória */
+        #win-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(218, 93, 100, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        #win-content {
+            background: #fff;
+            color: #333;
+            padding: 30px;
+            border-radius: 30px;
+            text-align: center;
+            border: 8px solid var(--secondary);
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        #win-content h2 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            text-shadow: none;
+        }
+        
+        #win-time-msg {
+            font-size: 1.3rem;
+            color: #333;
+            margin: 15px 0;
+            text-shadow: none;
+            font-weight: bold;
+        }
+        
+        #win-hint {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: none;
+        }
+
+        /* --- CELULAR --- */
+        @media (max-width: 650px) {
+            :root {
+                --board-w: 340px; 
+                --board-h: 255px;
+            }
+            h1 { font-size: 1.5rem; }
+            .instructions { font-size: 0.85rem; padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TELA DE SELEÇÃO DE IMAGEM -->
+    <div id="select-screen">
+        <h1 style="margin-top:0;">QUEBRA-CABEÇA DAS FORMIGAS</h1>
+        <h2>ESCOLHA UMA IMAGEM:</h2>
+        <div class="thumb-grid">
+            <div class="thumb-card" role="button" tabindex="0" onclick="selectImage('images/image_1.jpg')" onkeydown="if(event.key==='Enter')this.click()">
+                <img src="images/image_1.jpg" alt="Quebra-cabeça 1">
+            </div>
+            <div class="thumb-card" role="button" tabindex="0" onclick="selectImage('images/image_2.jpg')" onkeydown="if(event.key==='Enter')this.click()">
+                <img src="images/image_2.jpg" alt="Quebra-cabeça 2">
+            </div>
+            <div class="thumb-card" role="button" tabindex="0" onclick="selectImage('images/image_3.jpg')" onkeydown="if(event.key==='Enter')this.click()">
+                <img src="images/image_3.jpg" alt="Quebra-cabeça 3">
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA DO JOGO -->
+    <div id="game-wrapper" style="display:none; flex-direction:column; align-items:center;">
+        <h1 class="game-title">QUEBRA-CABEÇA</h1>
+        
+        <div class="controls" style="display:flex;align-items:center;gap:12px;">
+            <div id="timer">⏱️ 00:00</div>
+            <div class="buttons" style="display:flex;gap:10px;">
+                <button id="start-btn" onclick="startGame()">INICIAR</button>
+                <button id="restart-btn" onclick="restartGame()">MISTURAR TUDO</button>
+                <button onclick="backToSelect()">TROCAR IMAGEM</button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            TOQUE EM UMA PEÇA ABAIXO E DEPOIS TOQUE NO LUGAR EM QUE ELA ENCAIXA NA FIGURA.
+        </div>
+
+        <div id="game-area">
+        <div id="board"></div>
+        <div id="tray"></div>
+    </div>
+
+    </div> <!-- /game-wrapper -->
+
+    <div id="win-modal">
+        <div id="win-content">
+            <h2>🎉 PARABÉNS! 🎉</h2>
+            <div id="win-time-msg">Você completou o jogo!</div>
+            <div id="win-hint">Que tal tentar de novo e fazer em menos tempo?</div>
+            <button onclick="restartGame()" style="margin-right:10px;">JOGAR DE NOVO</button>
+            <button onclick="backToSelect()">TROCAR IMAGEM</button>
+        </div>
+    </div>
+
+    <script>
+        const board = document.getElementById('board');
+        const tray = document.getElementById('tray');
+        const winModal = document.getElementById('win-modal');
+        const selectScreen = document.getElementById('select-screen');
+        const gameWrapper = document.getElementById('game-wrapper');
+        const timerDisplay = document.getElementById('timer');
+        const winTimeMsg = document.getElementById('win-time-msg');
+        
+        const rows = 3;
+        const cols = 4;
+        const total = rows * cols;
+        let selectedPiece = null;
+        
+        // Variáveis do Cronômetro
+        let startTime;
+        let timerInterval;
+        let isRunning = false;
+        let canPlay = false;
+
+        let currentImageSrc = '';
+
+        function calcBoardSize(imgW, imgH) {
+            const maxW = Math.min(window.innerWidth * 0.92, 900);
+            const maxH = window.innerHeight * 0.58;
+            const ratio = imgW / imgH;
+            let bw = maxW;
+            let bh = bw / ratio;
+            if (bh > maxH) {
+                bh = maxH;
+                bw = bh * ratio;
+            }
+            return { w: Math.round(bw), h: Math.round(bh) };
+        }
+
+        function selectImage(src) {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => {
+                currentImageSrc = src;
+                const size = calcBoardSize(img.naturalWidth, img.naturalHeight);
+                document.documentElement.style.setProperty('--board-w', size.w + 'px');
+                document.documentElement.style.setProperty('--board-h', size.h + 'px');
+                document.documentElement.style.setProperty('--bg-image', `url('${src}')`);
+                document.documentElement.style.setProperty('--guide-display', 'block');
+                selectScreen.style.display = 'none';
+                gameWrapper.style.display = 'flex';
+                createGame();
+            };
+            img.onerror = () => {
+                alert('Erro ao carregar a imagem.');
+            };
+        }
+
+        function backToSelect() {
+            stopTimer();
+            timerDisplay.textContent = '⏱️ 00:00';
+            winModal.style.display = 'none';
+            gameWrapper.style.display = 'none';
+            selectScreen.style.display = 'block';
+            canPlay = false;
+            gameWrapper.classList.add('locked-play');
+            const startBtn = document.getElementById('start-btn');
+            if (startBtn) startBtn.style.display = 'inline-block';
+        }
+        
+        // --- FUNÇÕES DO CRONÔMETRO ---
+        function startTimer() {
+            stopTimer(); // Limpa se já existir
+            startTime = Date.now();
+            isRunning = true;
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+
+        function stopTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+        }
+
+        function updateTimer() {
+            if (!isRunning) return;
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `⏱️ ${minutes}:${seconds}`;
+        }
+        
+        function formatFinalTime() {
+            if (!startTime) return '0 segundos';
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            
+            let timeString = "";
+            if (minutes > 0) {
+                timeString += `${minutes} minuto${minutes > 1 ? 's' : ''} e `;
+            }
+            timeString += `${seconds} segundo${seconds !== 1 ? 's' : ''}`;
+            return timeString;
+        }
+
+        function createGame() {
+            board.innerHTML = '';
+            tray.innerHTML = '';
+            winModal.style.display = 'none';
+            selectedPiece = null;
+            canPlay = false;
+            gameWrapper.classList.add('locked-play');
+
+            const boardW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--board-w'));
+            const boardH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--board-h'));
+            const pieceW = boardW / cols;
+            const pieceH = boardH / rows;
+
+            // 1. Criar Slots
+            for (let i = 0; i < total; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.dataset.index = i;
+                
+                slot.onclick = () => {
+                    if (!canPlay) return;
+                    if (selectedPiece && !slot.hasChildNodes()) {
+                        if (selectedPiece.dataset.index === slot.dataset.index) {
+                            placePiece(selectedPiece, slot);
+                        } else {
+                            selectedPiece.classList.remove('selected');
+                            setTimeout(() => selectedPiece.classList.add('selected'), 100);
+                        }
+                    }
+                };
+                
+                board.appendChild(slot);
+            }
+
+            // 2. Criar Peças
+            let pieces = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const index = r * cols + c;
+                    const piece = document.createElement('div');
+                    piece.className = 'piece';
+                    piece.dataset.index = index;
+                    piece.style.width = pieceW + 'px';
+                    piece.style.height = pieceH + 'px';
+
+                    const bx = c * pieceW;
+                    const by = r * pieceH;
+                    piece.style.backgroundPosition = `-${bx}px -${by}px`;
+
+                    piece.onclick = (e) => {
+                        if (!canPlay) return;
+                        if(piece.classList.contains('placed')) return;
+                        e.stopPropagation();
+                        
+                        if (selectedPiece) selectedPiece.classList.remove('selected');
+                        if (selectedPiece !== piece) {
+                            selectedPiece = piece;
+                            piece.classList.add('selected');
+                        } else {
+                            selectedPiece = null;
+                        }
+                    };
+
+                    pieces.push(piece);
+                }
+            }
+
+            pieces.sort(() => Math.random() - 0.5);
+            pieces.forEach(p => tray.appendChild(p));
+        }
+
+        function placePiece(piece, slot) {
+            slot.appendChild(piece);
+            piece.classList.remove('selected');
+            piece.classList.add('placed');
+            piece.onclick = null; 
+            selectedPiece = null;
+            
+            // Verificar vitória
+            if (document.querySelectorAll('.piece.placed').length === total) {
+                stopTimer();
+                const timeText = formatFinalTime();
+                winTimeMsg.textContent = `Você montou tudo em ${timeText}!`;
+                setTimeout(() => winModal.style.display = 'flex', 300);
+            }
+        }
+
+        function startGame() {
+            const startBtn = document.getElementById('start-btn');
+            if (!isRunning) {
+                canPlay = true;
+                gameWrapper.classList.remove('locked-play');
+                startTimer();
+                if (startBtn) startBtn.style.display = 'none';
+            }
+        }
+
+        function restartGame() {
+            stopTimer();
+            timerDisplay.textContent = '⏱️ 00:00';
+            startTime = null;
+            canPlay = false;
+            gameWrapper.classList.add('locked-play');
+            const startBtn = document.getElementById('start-btn');
+            if (startBtn) startBtn.style.display = 'inline-block';
+            createGame();
+        }
+
+        window.onresize = () => {
+            if (gameWrapper.style.display !== 'none' && currentImageSrc) {
+                const img = new Image();
+                img.src = currentImageSrc;
+                img.onload = () => {
+                    const size = calcBoardSize(img.naturalWidth, img.naturalHeight);
+                    document.documentElement.style.setProperty('--board-w', size.w + 'px');
+                    document.documentElement.style.setProperty('--board-h', size.h + 'px');
+                    stopTimer();
+                    timerDisplay.textContent = '⏱️ 00:00';
+                    startTime = null;
+                    canPlay = false;
+                    gameWrapper.classList.add('locked-play');
+                    const startBtn = document.getElementById('start-btn');
+                    if (startBtn) startBtn.style.display = 'inline-block';
+                    createGame();
+                };
+            }
+        };
+    </script>
+</body>
+</html>

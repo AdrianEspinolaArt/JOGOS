@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Memória: Cédulas do Real</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #e9e72b;
+            --primary-dark: #c9c500;
+            --secondary: #3574ba;
+            --bg-gradient: linear-gradient(135deg, #5a9fd4 0%, #3574ba 100%);
+            --font-title: 'Fredoka One', cursive;
+        }
+
+        body {
+            font-family: var(--font-title);
+            background: var(--bg-gradient);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: var(--primary);
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* Telas */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+            box-sizing: border-box;
+            animation: fadeIn 0.5s ease;
+            position: relative;
+        }
+
+        .active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-family: var(--font-title);
+            color: var(--primary);
+            text-shadow: 3px 3px 0px var(--primary-dark);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: clamp(2rem, 8vw, 3.5rem);
+        }
+        h1.game-title {
+            margin: 0;
+            color: white;
+            font-size: clamp(1.8rem, 6vw, 3rem);
+        }
+
+        /* Tela Inicial vibrante */
+        #start-screen {
+            background: white;
+            border-radius: 40px;
+            padding: 40px;
+            border: 6px solid var(--primary);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            text-align: center;
+            width: 95%;
+            min-height: 400px;
+            justify-content: center;
+        }
+
+        .instruction-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            text-align: left;
+            margin: 25px 0 35px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 25px;
+            border-radius: 25px;
+            border: 2px solid rgba(41, 98, 255, 0.15);
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            font-size: 1.15rem;
+            color: #444;
+        }
+
+        /* Classe específica para centralizar a terceira instrução */
+        .instruction-item.centered {
+            grid-column: 1 / -1;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 1.8rem;
+            margin-right: 12px;
+            min-width: 40px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Carta igual à do jogo para as instruções */
+        .mini-card-icon {
+            width: 32px;
+            height: 48px;
+            background-color: var(--primary);
+            background-image: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent),
+                              repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.1) 5px, rgba(255,255,255,0.1) 10px);
+            border: 2px solid white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: var(--font-title);
+            font-size: 0.7rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+
+        .btn-main {
+            background-color: var(--primary);
+            color: white;
+            border: 2px solid white;
+            padding: 20px 60px;
+            font-size: 1.6rem;
+            border-radius: 80px;
+            font-family: var(--font-title);
+            cursor: pointer;
+            box-shadow: 0 8px var(--primary-dark);
+            transition: all 0.2s;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 11px var(--primary-dark);
+        }
+
+        .btn-main:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px var(--primary-dark);
+        }
+
+        /* Header do Jogo */
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 950px;
+            margin-bottom: 15px;
+            padding: 0 60px;
+            box-sizing: border-box;
+        }
+
+        .game-title-wrapper {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .btn-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e53935;
+            color: white;
+            border: 3px solid white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s, background 0.2s;
+            font-family: Arial, sans-serif;
+            line-height: 1;
+            z-index: 100;
+        }
+
+        .btn-close:hover {
+            transform: scale(1.1);
+            background: #c62828;
+        }
+
+        #info-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            background: white;
+            padding: 15px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 3px solid var(--primary);
+        }
+
+        /* Grade do Jogo - 7 Colunas em 2 fileiras */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 950px;
+            perspective: 1000px;
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 0.65 / 1; 
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            animation: pulseSuccess 0.6s ease-in-out;
+            cursor: default;
+        }
+
+        @keyframes pulseSuccess {
+            0% { transform: rotateY(180deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.1); filter: brightness(1.2); }
+            100% { transform: rotateY(180deg) scale(1); }
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            border: 4px solid #fff;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: white;
+        }
+
+        .card-front {
+            background-color: var(--primary);
+            background-image: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent),
+                              repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
+            transform: rotateY(0deg);
+            color: white;
+            font-size: clamp(1rem, 3vw, 2.5rem);
+            font-family: var(--font-title);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: white;
+        }
+
+        .card-back img {
+            width: 100%;
+            height: 100%;
+            /* Ajustado para 'contain' para garantir que a nota apareça inteira sem cortes */
+            object-fit: contain; 
+            display: block;
+        }
+
+        #victory-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 40px;
+            text-align: center;
+            border: 10px solid var(--secondary);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .trophy {
+            font-size: 7rem;
+            margin-bottom: 20px;
+            display: block;
+            filter: drop-shadow(0 0 15px gold);
+        }
+
+        @media (max-width: 900px) {
+            .game-grid { grid-template-columns: repeat(4, 1fr); }
+            .instruction-box { grid-template-columns: 1fr; }
+            .instruction-item.centered { text-align: left; justify-content: flex-start; }
+            .btn-close { width: 45px; height: 45px; top: 10px; right: 10px; font-size: 1.8rem; }
+        }
+
+        @media (max-width: 500px) {
+            .game-grid { grid-template-columns: repeat(2, 1fr); }
+            h1 { font-size: 1.6rem; }
+            .btn-close { width: 42px; height: 42px; font-size: 1.6rem; top: 8px; right: 8px; }
+            .btn-main { padding: 15px 40px; font-size: 1.2rem; }
+            #start-screen { padding: 25px 15px; }
+            #info-container { font-size: 1rem; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TELA INICIAL -->
+    <div id="start-screen" class="screen active">
+        <h1>Memória do Real 💰</h1>
+        <div class="instruction-box">
+            <div class="instruction-item">
+                <span class="icon">🔍</span>
+                <span>Encontra a <b>frente</b> e o <b>verso</b> de cada nota de Real.</span>
+            </div>
+            <div class="instruction-item">
+                <div class="icon">
+                    <div class="mini-card-icon">R$</div>
+                </div>
+                <span>Clica em duas cartas para ver se formam um par correspondente.</span>
+            </div>
+            <div class="instruction-item centered">
+                <span class="icon">⏱️</span>
+                <span>Tenta terminar o jogo o mais rápido possível para bater o teu recorde!</span>
+            </div>
+        </div>
+        <button class="btn-main" id="btn-start">COMEÇAR JOGO</button>
+    </div>
+
+    <!-- TELA DO JOGO -->
+    <div id="game-screen" class="screen">
+        <button class="btn-close" id="btn-close" title="Fechar Jogo">×</button>
+        <div class="game-header">
+            <div class="game-title-wrapper">
+                <h1 class="game-title">Memória do Real 💰</h1>
+            </div>
+        </div>
+        <div id="info-container">
+            <div>⏳ <span id="timer">00:00</span></div>
+            <div>✅ <span id="pairs-count">0</span>/7 Pares</div>
+        </div>
+        <div class="game-grid" id="game-grid"></div>
+    </div>
+
+    <!-- MODAL DE VITÓRIA -->
+    <div id="victory-modal">
+        <div class="modal-content">
+            <span class="trophy">🏆</span>
+            <div id="victory-message" style="font-family: var(--font-title); font-size: 1.8rem; color: var(--primary); margin-bottom: 30px;">PARABÉNS!</div>
+            <button class="btn-main" id="play-again-btn">JOGAR NOVAMENTE</button>
+        </div>
+    </div>
+
+    <!-- ÁUDIOS -->
+    <audio id="sound-error" src="https://assets.mixkit.co/active_storage/sfx/2595/2595-preview.mp3" preload="auto"></audio>
+    <audio id="sound-match" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
+    <audio id="sound-win" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
+
+<script>
+    /**
+     * CONFIGURAÇÃO DAS NOTAS:
+     * O jogo procura primeiro pelo arquivo local (ex: '2_frente.jpg').
+     * Se você salvou com outros nomes, basta ajustar a propriedade 'local' abaixo.
+     */
+    const banknotes = [
+        { id: '2', side: 'frente', local: '2_frente.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/2_reais_anverso_2010.jpg' },
+        { id: '2', side: 'verso', local: '2_verso.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/7/70/2_reais_verso_2010.jpg' },
+        { id: '5', side: 'frente', local: '5_frente.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/3/36/5_reais_anverso_2010.jpg' },
+        { id: '5', side: 'verso', local: '5_verso.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/6/6f/5_reais_verso_2010.jpg' },
+        { id: '10', side: 'frente', local: '10_frente.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/1/11/10_reais_anverso_2010.jpg' },
+        { id: '10', side: 'verso', local: '10_verso.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/0/0c/10_reais_verso_2010.jpg' },
+        { id: '20', side: 'frente', local: '20_frente.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/2/23/20_reais_anverso_2010.jpg' },
+        { id: '20', side: 'verso', local: '20_verso.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/3/30/20_reais_verso_2010.jpg' },
+        { id: '50', side: 'frente', local: '50_frente.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/50_reais_anverso_2010.jpg' },
+        { id: '50', side: 'verso', local: '50_verso.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/b/b2/50_reais_verso_2010.jpg' },
+        { id: '100', side: 'frente', local: '100_frente.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/100_reais_anverso_2010.jpg' },
+        { id: '100', side: 'verso', local: '100_verso.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/7/75/100_reais_verso_2010.jpg' },
+        { id: '200', side: 'frente', local: '200_frente.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/f/ff/200_reais_anverso_2020.jpg' },
+        { id: '200', side: 'verso', local: '200_verso.jpg', cloud: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/200_reais_verso_2020.jpg' }
+    ];
+
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const btnStart = document.getElementById('btn-start');
+    const btnClose = document.getElementById('btn-close');
+    const gridElement = document.getElementById('game-grid');
+    const timerElement = document.getElementById('timer');
+    const pairsCountElement = document.getElementById('pairs-count');
+    const victoryModal = document.getElementById('victory-modal');
+    const victoryMessage = document.getElementById('victory-message');
+    const playAgainBtn = document.getElementById('play-again-btn');
+
+    const soundMatch = document.getElementById('sound-match');
+    const soundError = document.getElementById('sound-error');
+    const soundWin = document.getElementById('sound-win');
+
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let isLocked = false;
+    let timer;
+    let seconds = 0;
+    let gameStarted = false;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function formatTime(secs) {
+        let m = Math.floor(secs / 60).toString().padStart(2, '0');
+        let s = (secs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function createCard(note) {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.id = note.id;
+        card.dataset.side = note.side;
+        
+        // Proxy para as imagens da nuvem (caso a local não exista)
+        const cloudUrl = `https://images.weserv.nl/?url=${encodeURIComponent(note.cloud)}&h=500&fit=contain`;
+
+        card.innerHTML = `
+            <div class="card-face card-front">
+                <span>R$</span>
+            </div>
+            <div class="card-face card-back">
+                <img src="${note.local}" alt="Cédula R$ ${note.id}" onerror="this.src='${cloudUrl}'">
+            </div>
+        `;
+        card.addEventListener('click', () => flipCard(card));
+        return card;
+    }
+
+    function flipCard(card) {
+        if (isLocked || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+        if (!gameStarted) {
+            gameStarted = true;
+            timer = setInterval(() => { 
+                seconds++; 
+                timerElement.innerText = formatTime(seconds); 
+            }, 1000);
+        }
+
+        card.classList.add('flipped');
+        flippedCards.push(card);
+
+        if (flippedCards.length === 2) {
+            isLocked = true;
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        const [c1, c2] = flippedCards;
+        // Lógica de par: mesmo valor e lados diferentes (frente/verso)
+        const isMatch = (c1.dataset.id === c2.dataset.id) && (c1.dataset.side !== c2.dataset.side);
+
+        if (isMatch) {
+            setTimeout(() => {
+                soundMatch.currentTime = 0;
+                soundMatch.play();
+                c1.classList.add('matched');
+                c2.classList.add('matched');
+                matchedPairs++;
+                pairsCountElement.innerText = matchedPairs;
+                flippedCards = [];
+                isLocked = false;
+                if (matchedPairs === 7) endGame();
+            }, 400);
+        } else {
+            setTimeout(() => {
+                soundError.currentTime = 0;
+                soundError.play();
+                c1.classList.remove('flipped');
+                c2.classList.remove('flipped');
+                flippedCards = [];
+                isLocked = false;
+            }, 1000);
+        }
+    }
+
+    function endGame() {
+        clearInterval(timer);
+        soundWin.play();
+        let timeTxt = formatTime(seconds);
+        victoryMessage.innerHTML = `PARABÉNS!<br>VOCÊ TERMINOU O JOGO EM <br><b>${timeTxt} MINUTOS</b>.`;
+        victoryModal.style.display = 'flex';
+    }
+
+    function initGame() {
+        startScreen.classList.remove('active');
+        gameScreen.classList.add('active');
+        
+        gridElement.innerHTML = '';
+        victoryModal.style.display = 'none';
+        flippedCards = [];
+        matchedPairs = 0;
+        seconds = 0;
+        gameStarted = false;
+        isLocked = false;
+        timerElement.innerText = '00:00';
+        pairsCountElement.innerText = '0';
+        clearInterval(timer);
+        
+        const deck = shuffle([...banknotes]);
+        deck.forEach(n => gridElement.appendChild(createCard(n)));
+    }
+
+    function resetToStart() {
+        clearInterval(timer);
+        victoryModal.style.display = 'none';
+        gameScreen.classList.remove('active');
+        startScreen.classList.add('active');
+        flippedCards = [];
+        isLocked = false;
+    }
+
+    btnStart.addEventListener('click', initGame);
+    btnClose.addEventListener('click', resetToStart);
+    playAgainBtn.addEventListener('click', resetToStart);
+</script>
+</body>
+</html>

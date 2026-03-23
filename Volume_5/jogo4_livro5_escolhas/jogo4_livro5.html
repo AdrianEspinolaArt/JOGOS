@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Desafio do Orçamento Pet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+            user-select: none;
+            background-color: #ffde59;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #FF914D 0%, #FFBD59 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-option {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            width: 100%;
+            max-width: 280px;
+            border-bottom: 8px solid #e2e8f0;
+        }
+
+        .card-option:hover {
+            transform: translateY(-8px);
+            border-bottom-width: 12px;
+        }
+
+        .card-option:active {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+        }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: #ff3131;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #8c0000;
+            cursor: pointer;
+        }
+
+        .close-btn:active {
+            box-shadow: none;
+            transform: translateY(2px);
+        }
+
+        .options-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            width: 100%;
+            max-width: 900px;
+            padding: 10px;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
+        
+        .progress-bar {
+            height: 14px;
+            border-radius: 7px;
+            transition: width 0.5s ease;
+        }
+
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .modal-content::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="mainContainer">
+        
+        <div class="close-btn" onclick="location.reload()" title="Reiniciar">✕</div>
+
+        <!-- HUD COLORIDO (Escondido no início) -->
+        <div id="hud" class="fixed top-4 flex flex-col items-center w-full z-10 px-4 hidden">
+            <div class="bg-white rounded-[28px] p-4 shadow-xl border-b-8 border-blue-500 flex flex-col gap-2 w-full max-w-sm">
+                <div class="flex justify-between items-center px-1">
+                    <div class="flex flex-col">
+                        <span class="text-gray-400 text-[10px] uppercase font-bold">Carteira</span>
+                        <span class="text-green-600 text-xl md:text-2xl font-bold" id="budgetDisplay">R$ 300</span>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-gray-400 text-[10px] uppercase font-bold">Economia</span>
+                        <span class="text-blue-600 text-xl md:text-2xl font-bold" id="savedDisplay">R$ 0</span>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden border border-gray-200">
+                    <div id="budgetBar" class="progress-bar bg-green-500" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÁREA DE JOGO -->
+        <div id="gameArea" class="hidden flex flex-col items-center justify-center w-full h-full p-4 text-center">
+            <div class="mb-2 bg-white/20 text-white px-4 py-1 rounded-full font-bold text-xs uppercase tracking-widest mt-16" id="roundCounter">Compra 1 de 10</div>
+            <h2 id="questionText" class="text-2xl md:text-4xl text-white font-bold mb-6 max-w-3xl drop-shadow-md">
+                O que vamos comprar?
+            </h2>
+            
+            <div id="optionsContainer" class="options-wrapper"></div>
+        </div>
+
+        <!-- TELA INICIAL -->
+        <div id="startScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-[40px] p-8 md:p-12 max-w-lg w-full text-center shadow-2xl border-8 border-orange-400 modal-content">
+                <div class="text-7xl mb-4">🐶💰</div>
+                <h1 class="text-4xl md:text-6xl text-orange-600 font-bold mb-4 leading-tight">Pet Shop Inteligente</h1>
+                <p class="text-gray-700 text-lg md:text-xl mb-8 leading-relaxed">
+                    Você tem <b class="text-green-600 font-bold">R$ 300,00</b> para comprar 10 itens para o seu pet. <br>
+                    Cuidado! Se o dinheiro acabar antes do fim, você perde o desafio!
+                </p>
+                <button onclick="startGame()" class="bg-green-500 hover:bg-green-600 text-white text-2xl md:text-3xl font-bold py-4 px-12 rounded-[24px] shadow-[0_8px_0_#15803d] active:shadow-none active:translate-y-1 transition-all">
+                    VAMOS COMEÇAR!
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL DE FEEDBACK -->
+        <div id="feedbackModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay hidden">
+            <div class="bg-white rounded-[40px] p-8 max-w-md w-full text-center shadow-2xl border-8 modal-content" id="modalBorder">
+                <div id="feedbackIcon" class="text-7xl mb-4">✅</div>
+                <h3 id="feedbackResult" class="text-2xl md:text-3xl font-bold mb-2">Decisão Tomada!</h3>
+                <p id="feedbackExplanation" class="text-gray-600 text-lg mb-6 leading-snug"></p>
+                <button id="nextBtn" onclick="closeFeedback()" class="bg-blue-600 text-white text-xl font-bold py-3 px-10 rounded-2xl shadow-[0_4px_0_#1d4ed8] active:shadow-none active:translate-y-1 transition-all">
+                    Continuar ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- TELA FINAL -->
+        <div id="endScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-orange-600/95 hidden">
+            <div class="bg-white rounded-[40px] p-6 md:p-10 max-w-md w-full text-center shadow-2xl border-8 border-white modal-content">
+                <div class="text-7xl mb-4" id="endEmoji">🏆</div>
+                <h2 id="endTitle" class="text-3xl md:text-4xl font-bold mb-4 text-orange-600">Resultado</h2>
+                <div class="bg-orange-50 p-6 rounded-[32px] mb-6 space-y-4 border border-orange-100 w-full">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-lg md:text-xl font-bold">Sobrou na carteira</span>
+                        <span class="text-green-600 text-3xl font-bold" id="finalBudget">R$ 0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-lg md:text-xl font-bold">Total economizado</span>
+                        <span class="text-blue-600 text-3xl font-bold" id="finalSaved">R$ 0</span>
+                    </div>
+                </div>
+                <p id="performanceText" class="text-gray-700 text-lg mb-8 font-medium leading-tight px-4"></p>
+                <button onclick="location.reload()" class="bg-orange-500 hover:bg-orange-600 text-white text-2xl font-bold py-4 px-12 rounded-[24px] shadow-[0_8px_0_#c2410c] active:shadow-none active:translate-y-1 transition-all mb-6">
+                    Jogar de Novo
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let budget = 300;
+        let saved = 0;
+        let currentRound = 0;
+        const INITIAL_BUDGET = 300;
+
+        const scenarios = [
+            {
+                question: "O pet precisa de 3kg de Ração! 🦴",
+                options: [
+                    { title: "3 sacos de 1kg", price: 60, isSmart: false, explanation: "Cada saco custou R$ 20. Se tivesse levado o pacote de 3kg por R$ 45, cada quilo sairia por R$ 15. Você gastou R$ 15 extras!" },
+                    { title: "1 saco de 3kg", price: 45, isSmart: true, saving: 15, explanation: "Ótima escolha! Comprando em maior quantidade, o preço por quilo caiu e você economizou R$ 15." }
+                ]
+            },
+            {
+                question: "O xampu acabou! 🧴",
+                options: [
+                    { title: "Frasco novo completo", price: 25, isSmart: false, explanation: "Você gastou R$ 25. O refil de xampu custava R$ 15 e é o mesmo produto. Você pagou R$ 10 a mais apenas pela embalagem!" },
+                    { title: "Refil de xampu", price: 15, isSmart: true, saving: 10, explanation: "Inteligente! O refil de xampu é mais barato e ecológico. Você economizou R$ 10!" }
+                ]
+            },
+            {
+                question: "Brinquedo novo: Bolinhas! 🎾",
+                options: [
+                    { title: "Comprar 3 avulsas", price: 30, isSmart: false, explanation: "Cada bolinha saiu por R$ 10. No kit com 3, cada uma sairia por R$ 6. Você gastou R$ 12 a mais!" },
+                    { title: "Kit com 3 bolinhas", price: 18, isSmart: true, saving: 12, explanation: "Excelente! No kit você economizou R$ 12 e o pet ganhou a mesma diversão." }
+                ]
+            },
+            {
+                question: "Onde comprar a nova Coleira? 🧣",
+                options: [
+                    { title: "Loja do Shopping", price: 45, isSmart: false, explanation: "No shopping os preços são mais altos. Na loja de bairro era R$ 25. Você gastou R$ 20 a mais por conveniência." },
+                    { title: "Loja do Bairro", price: 25, isSmart: true, saving: 20, explanation: "Pesquisar preços fora do shopping economizou R$ 20 hoje!" }
+                ]
+            },
+            {
+                question: "Escolha uma Caminha 🛏️",
+                options: [
+                    { title: "Cama Modelo Luxo", price: 180, isSmart: false, explanation: "Essa cama custou R$ 180! Ela consumiu mais da metade do seu dinheiro. A simples de R$ 60 era tão confortável quanto." },
+                    { title: "Cama Conforto Simples", price: 60, isSmart: true, saving: 120, explanation: "Incrível! Você economizou R$ 120 e garantiu o mesmo descanso para o pet. Esse dinheiro vai ser vital agora!" }
+                ]
+            },
+            {
+                question: "Um novo Comedouro! 🥣",
+                options: [
+                    { title: "Automático Digital", price: 80, isSmart: false, explanation: "O comedouro simples custava R$ 15. O digital custou R$ 65 a mais sem necessidade real agora." },
+                    { title: "Pote de Inox Simples", price: 15, isSmart: true, saving: 65, explanation: "Boa! O pote de inox é higiênico e barato. Você economizou R$ 65 comparado ao automático." }
+                ]
+            },
+            {
+                question: "Hora do Petisco! 🍪",
+                options: [
+                    { title: "4 sachês pequenos", price: 32, isSmart: false, explanation: "Cada sachê saiu por R$ 8. No pacote grande com 4, cada um sairia por R$ 5. Você perdeu R$ 12 nessa!" },
+                    { title: "Pacote Grande Econômico", price: 20, isSmart: true, saving: 12, explanation: "Certo! Pacotes maiores de petiscos quase sempre são mais baratos." }
+                ]
+            },
+            {
+                question: "Brinquedo de Corda 🪢",
+                options: [
+                    { title: "Marca Famosa Importada", price: 35, isSmart: false, explanation: "Você pagou pela marca! Um brinquedo de corda genérico era R$ 10. Foram R$ 25 extras gastos." },
+                    { title: "Corda Genérica", price: 10, isSmart: true, saving: 25, explanation: "Mandou bem! Para o pet, a diversão é a mesma. Você economizou R$ 25." }
+                ]
+            },
+            {
+                question: "O pet precisa de banho! 🧼",
+                options: [
+                    { title: "Banho no Pet Spa", price: 50, isSmart: false, explanation: "Um banho em casa custaria quase nada (só água e xampu). Você gastou R$ 45 a mais aqui." },
+                    { title: "Banho em Casa", price: 5, isSmart: true, saving: 45, explanation: "Economia pura! Dar banho em casa salvou R$ 45 do seu orçamento." }
+                ]
+            },
+            {
+                question: "Tapetes Higiênicos 📑",
+                options: [
+                    { title: "Pacote com 7 unidades", price: 60, isSmart: false, explanation: "O pacote econômico com 30 unidades custava R$ 40. Você pagou mais caro por menos tapetes!" },
+                    { title: "Pacote econômico com 30 unidades", price: 40, isSmart: true, saving: 20, explanation: "Perfeito! Você garantiu tapetes para o mês todo e economizou R$ 20." }
+                ]
+            }
+        ];
+
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+            budget = INITIAL_BUDGET;
+            saved = 0;
+            currentRound = 0;
+            updateHUD();
+            showRound();
+        }
+
+        function updateHUD() {
+            document.getElementById('budgetDisplay').innerText = `R$ ${budget}`;
+            document.getElementById('savedDisplay').innerText = `R$ ${saved}`;
+            const perc = (budget / INITIAL_BUDGET) * 100;
+            const bar = document.getElementById('budgetBar');
+            bar.style.width = `${Math.max(0, perc)}%`;
+            
+            if (perc < 25) bar.className = "progress-bar bg-red-500";
+            else if (perc < 50) bar.className = "progress-bar bg-yellow-400";
+            else bar.className = "progress-bar bg-green-500";
+        }
+
+        function showRound() {
+            if (currentRound >= scenarios.length) {
+                endGame();
+                return;
+            }
+
+            const scenario = scenarios[currentRound];
+            document.getElementById('roundCounter').innerText = `Compra ${currentRound + 1} de 10`;
+            document.getElementById('questionText').innerText = scenario.question;
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            scenario.options.forEach(opt => {
+                const card = document.createElement('div');
+                card.className = `card-option bg-white p-6 md:p-8 rounded-[35px] shadow-lg border-4 border-transparent flex flex-col items-center justify-center`;
+                card.innerHTML = `
+                    <div class="text-lg md:text-xl font-bold text-gray-700 mb-2 leading-tight">${opt.title}</div>
+                    <div class="text-3xl md:text-4xl font-black text-orange-500">R$ ${opt.price}</div>
+                `;
+                card.onclick = () => makeChoice(opt);
+                container.appendChild(card);
+            });
+        }
+
+        function makeChoice(opt) {
+            budget -= opt.price;
+            if (opt.isSmart) saved += opt.saving;
+
+            const modal = document.getElementById('feedbackModal');
+            const resultText = document.getElementById('feedbackResult');
+            const explText = document.getElementById('feedbackExplanation');
+            const icon = document.getElementById('feedbackIcon');
+            const border = document.getElementById('modalBorder');
+
+            if (budget < 0) {
+                resultText.innerText = "Faltou Dinheiro! 💸";
+                icon.innerText = "😱";
+                explText.innerText = "O orçamento de R$ 300 estourou! Você gastou demais em alguns itens e não conseguiu terminar as compras.";
+                border.className = "bg-white rounded-[40px] p-8 max-w-md w-full text-center border-8 border-red-500 modal-content";
+                document.getElementById('nextBtn').innerText = "Ver Resultado";
+            } else if (opt.isSmart) {
+                resultText.innerText = "Escolha Esperta! 🌟";
+                icon.innerText = "✅";
+                explText.innerText = opt.explanation;
+                border.className = "bg-white rounded-[40px] p-8 max-w-md w-full text-center border-8 border-green-500 modal-content";
+                document.getElementById('nextBtn').innerText = "Continuar ➔";
+            } else {
+                resultText.innerText = "Dava para poupar...";
+                icon.innerText = "⚠️";
+                explText.innerText = opt.explanation;
+                border.className = "bg-white rounded-[40px] p-8 max-w-md w-full text-center border-8 border-orange-400 modal-content";
+                document.getElementById('nextBtn').innerText = "Continuar ➔";
+            }
+
+            updateHUD();
+            modal.classList.remove('hidden');
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedbackModal').classList.add('hidden');
+            if (budget < 0) {
+                endGame();
+            } else {
+                currentRound++;
+                showRound();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('endScreen').classList.remove('hidden');
+            document.getElementById('finalBudget').innerText = `R$ ${Math.max(0, budget)}`;
+            document.getElementById('finalSaved').innerText = `R$ ${saved}`;
+            
+            const perf = document.getElementById('performanceText');
+            const emoji = document.getElementById('endEmoji');
+            const title = document.getElementById('endTitle');
+
+            if (budget < 0) {
+                emoji.innerText = "💸";
+                title.innerText = "Tente Novamente!";
+                perf.innerText = "Você não conseguiu completar o desafio com R$ 300. Que tal tentar de novo evitando os itens mais caros?";
+            } else if (saved >= 300) {
+                emoji.innerText = "🏆";
+                title.innerText = "Expert em Economia!";
+                perf.innerText = "Incrível! Você comprou tudo economizando o máximo possível. Você é um craque das compras inteligentes!";
+            } else if (saved >= 150) {
+                emoji.innerText = "🥈";
+                title.innerText = "Ótimo Comprador!";
+                perf.innerText = "Muito bem! Você completou o desafio e ainda guardou um bom troco. Continue assim!";
+            } else {
+                emoji.innerText = "🦴";
+                title.innerText = "Pode Melhorar!";
+                perf.innerText = "Você comprou tudo, mas quase ficou sem dinheiro. Tente comparar mais os preços na próxima vez!";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Missão: Minha Casa Sustentável</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4ECDC4;
+            --secondary: #FF6B6B;
+            --accent: #FFE66D;
+            --success: #2ecc71;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: rgba(255, 255, 255, 0.98);
+            --text-main: #2D3436;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg-gradient);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; 
+            color: var(--text-main);
+        }
+
+        #game-viewport {
+            width: 98%;
+            max-width: 1200px;
+            height: 96vh;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Botão Sair - Posicionado para evitar qualquer sobreposição */
+        .global-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 45px;
+            height: 45px;
+            background: var(--secondary);
+            color: white;
+            border: 3px solid white;
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+
+        .global-close:hover { transform: scale(1.1); }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #screen-start {
+            text-align: center;
+            justify-content: center;
+            background: radial-gradient(circle, #ffffff 0%, #e0e0e0 100%);
+        }
+
+        #screen-start h1 {
+            font-size: 8vmin;
+            margin: 0;
+            color: #4834d4;
+            line-height: 1.1;
+            text-shadow: 3px 3px 0px var(--accent);
+        }
+
+        .start-icon {
+            font-size: 25vmin;
+            margin: 2vh;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2vh); }
+        }
+
+        /* HUD - Espaçamento lateral aumentado para evitar o botão X */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 0 auto 15px;
+            width: 75%; 
+            max-width: 600px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-bottom: 6px solid #ddd;
+            flex-shrink: 0;
+        }
+
+        .economy-label { font-size: 0.8rem; font-weight: 700; color: #777; }
+        .economy-value { font-size: 4vmin; font-weight: 800; color: var(--success); line-height: 1; }
+
+        .energy-bar-container {
+            width: 20vw;
+            max-width: 120px;
+            height: 15px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #ddd;
+        }
+
+        .energy-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #FF6B6B, #F7D794, #55E6C1);
+            transition: width 0.6s ease;
+        }
+
+        .house-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 12px;
+            flex-grow: 1;
+            min-height: 0;
+        }
+
+        .room-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-bottom: 6px solid #dfe6e9;
+            padding: 8px;
+            transition: transform 0.2s;
+        }
+
+        .room-card:hover { transform: scale(1.02); }
+
+        .room-card.done {
+            background: #e8fce8;
+            border-bottom-color: var(--success);
+            opacity: 0.9;
+        }
+
+        .room-card .icon {
+            font-size: 9vmin;
+            line-height: 1;
+        }
+
+        .room-card span {
+            font-weight: 700;
+            font-size: 2.3vmin;
+            color: #333;
+            text-align: center;
+        }
+
+        .room-content-wrapper {
+            margin: auto;
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 15px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 3.2vmin;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-accent { background: var(--accent); color: #333; }
+        
+        /* Botão jogar - Tamanho ajustado à palavra */
+        .btn-start { 
+            font-size: 3.5vmin; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            margin: 15px auto 0; 
+            width: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #feedback-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            border-radius: 30px;
+            padding: 25px;
+            text-align: center;
+            z-index: 3000;
+            box-shadow: 0 0 0 2000px rgba(0,0,0,0.7), 0 20px 40px rgba(0,0,0,0.4);
+            display: none;
+        }
+
+        .savings-badge {
+            font-size: 8vmin;
+            color: var(--success);
+            font-weight: 800;
+            margin: 8px 0;
+            display: block;
+        }
+
+        .footer-info {
+            text-align: center;
+            padding: 8px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 600px) {
+            .house-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; overflow-y: auto; }
+            #game-viewport { height: 98vh; }
+            .screen { padding: 10px; }
+            .hud { width: 70%; padding: 8px 12px; }
+            .room-card .icon { font-size: 12vmin; }
+            .room-card span { font-size: 3.8vmin; }
+            .global-close { width: 35px; height: 35px; font-size: 20px; top: 10px; right: 10px; }
+            .btn-start { font-size: 5vmin; padding: 10px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-viewport">
+        <button class="global-close" id="btn-quit" style="display:none;" onclick="showScreen('screen-start')">×</button>
+
+        <div class="screen active" id="screen-start">
+            <div class="start-icon">🏠</div>
+            <h1>Minha Casa<br>Sustentável</h1>
+            <p style="font-size: 4vmin; color: #555; max-width: 80%; margin: 15px auto; font-weight: 500;">
+                Transforme sua casa em um exemplo de economia!
+            </p>
+            <div style="width: 100%;">
+                <button class="btn btn-primary btn-start" onclick="startGame()">▶ JOGAR</button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-house">
+            <div class="hud">
+                <div>
+                    <span class="economy-label">ECONOMIA</span><br>
+                    <span class="economy-value">R$ <span id="val-savings">0,00</span></span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="economy-label">EFICIÊNCIA</span>
+                    <div class="energy-bar-container">
+                        <div class="energy-bar-fill" id="val-progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="house-grid" id="main-grid"></div>
+            
+            <div class="footer-info">
+                Progresso: <span id="val-completed">0</span> / 9 áreas
+            </div>
+        </div>
+
+        <div class="screen" id="screen-room">
+            <div class="room-content-wrapper">
+                <div id="room-detail-icon" style="font-size: 18vmin;"></div>
+                <h2 id="room-detail-title" style="font-size: 5.5vmin; margin: 0; color: #4834d4;"></h2>
+                <div class="task-list" id="room-task-list"></div>
+                <button class="btn" style="background: #f0f0f0; font-size: 3vmin;" onclick="showScreen('screen-house')">
+                    ⬅ Voltar
+                </button>
+            </div>
+        </div>
+
+        <div class="screen" id="screen-result">
+            <div class="room-content-wrapper">
+                <h1 style="font-size: 7vmin; color: var(--success); margin: 0;">Parabéns!</h1>
+                <div id="result-emoji" style="font-size: 18vmin;">🏆</div>
+                <div style="font-size: 3.8vmin; font-weight: 700;" id="result-text"></div>
+                <div style="background: #fdfdfd; border: 3px dashed #ddd; border-radius: 20px; padding: 15px;">
+                    <span style="font-size: 3.5vmin;">Economia Mensal:</span><br>
+                    <span class="savings-badge" id="result-monthly">R$ 0,00</span>
+                    <span style="font-size: 3.5vmin; color: #4834d4; font-weight: 800;">Anual: R$ <span id="result-yearly">0</span></span>
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="location.reload()">RECOMEÇAR</button>
+            </div>
+        </div>
+
+        <div id="feedback-box">
+            <div id="fb-icon" style="font-size: 12vmin;">✅</div>
+            <h2 id="fb-title" style="font-size: 5vmin;">Boa!</h2>
+            <p id="fb-msg" style="font-size: 4vmin; color: #555;"></p>
+            <span class="savings-badge" id="fb-savings">+ R$ 0,00</span>
+            <button class="btn btn-primary" style="width: 100%;" onclick="hideFeedback()">CONTINUAR</button>
+        </div>
+    </div>
+
+    <script>
+        let totalSavings = 0;
+        let completedCount = 0;
+        let visitedRooms = new Set();
+        
+        const rooms = [
+            { id: 'entrada', title: 'Entrada', icon: '🚪', tasks: [
+                { text: 'Sensor de Presença', val: 3.50, msg: 'As luzes agora só acendem quando necessário!' },
+                { text: 'Tapete Novo', val: 0, msg: 'Ficou bonito, mas o gasto continua.' },
+                { text: 'Lâmpada LED', val: 5.00, msg: 'LEDs gastam 80% menos que as antigas!' }
+            ]},
+            { id: 'cozinha', title: 'Cozinha', icon: '🍳', tasks: [
+                { text: 'Tirar micro-ondas da tomada', val: 4.00, msg: 'Standby é o gasto invisível!' },
+                { text: 'Limpar a geladeira', val: 0, msg: 'Higiene nota 10, economia nota 0.' },
+                { text: 'Trocar borracha da geladeira', val: 6.50, msg: 'O frio não foge mais e gasta menos!' }
+            ]},
+            { id: 'garagem', title: 'Garagem', icon: '🚗', tasks: [
+                { text: 'Luz com timer', val: 3.50, msg: 'Nada de esquecer a luz ligada na garagem!' },
+                { text: 'Pintar de Branco', val: 2.00, msg: 'Cores claras ajudam a iluminar o local!' },
+                { text: 'Organizar prateleiras', val: 0, msg: 'Tudo arrumado, mas o consumo é o mesmo.' }
+            ]},
+            { id: 'sala', title: 'Sala', icon: '🛋️', tasks: [
+                { text: 'Abrir cortinas', val: 4.50, msg: 'Sol: a luz natural mais barata que existe!' },
+                { text: 'Baixar brilho da TV', val: 3.00, msg: 'Brilho menor = menos gasto e mais vida pra TV!' },
+                { text: 'Trocar almofadas', val: 0, msg: 'Confortável, mas sem economia.' }
+            ]},
+            { id: 'corredor', title: 'Corredor', icon: '💡', tasks: [
+                { text: 'Sensor de movimento', val: 4.00, msg: 'Corredor iluminado só quando você passa!' },
+                { text: 'Lâmpada de 5W', val: 2.00, msg: 'Corredores não precisam de luz super forte.' },
+                { text: 'Colocar quadros', val: 0, msg: 'Arte linda, conta igual.' }
+            ]},
+            { id: 'quarto1', title: 'Meu Quarto', icon: '🎮', tasks: [
+                { text: 'Videogame fora da tomada', val: 5.50, msg: 'Standby do game também consome!' },
+                { text: 'Luz de mesa LED', val: 3.00, msg: 'Foco no estudo com baixo consumo!' },
+                { text: 'Arrumar a cama', val: 0, msg: 'Sua mãe amou, o relógio de luz nem notou.' }
+            ]},
+            { id: 'quarto2', title: 'Quarto Pais', icon: '🛌', tasks: [
+                { text: 'Tirar carregadores', val: 3.50, msg: 'Eles sugam energia mesmo sem o celular!' },
+                { text: 'Ar-condicionado no 24°C', val: 8.00, msg: 'Temperatura ideal para o seu bolso!' },
+                { text: 'Virar o colchão', val: 0, msg: 'Bom sono, mas sem economia.' }
+            ]},
+            { id: 'quarto3', title: 'Quarto Visitas', icon: '🧸', tasks: [
+                { text: 'Manter tudo desligado', val: 4.00, msg: 'Sem visitas, tudo fora da tomada!' },
+                { text: 'Lâmpada LED', val: 3.00, msg: 'Eficiência total quando precisar usar!' },
+                { text: 'Trocar cortina', val: 0, msg: 'Novo visual, mesmo gasto.' }
+            ]},
+            { id: 'banheiro', title: 'Banheiro', icon: '🛁', tasks: [
+                { text: 'Banho de 5 minutos', val: 15.00, msg: 'O chuveiro é o maior campeão de gastos!' },
+                { text: 'Chuveiro no "Verão"', val: 10.00, msg: 'Água morna economiza 50% de energia!' },
+                { text: 'Lavar as mãos', val: 0, msg: 'Saúde em primeiro lugar, economia depois.' }
+            ]}
+        ];
+
+        function startGame() {
+            showScreen('screen-house');
+            document.getElementById('btn-quit').style.display = 'flex';
+            renderHouse();
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'screen-start') document.getElementById('btn-quit').style.display = 'none';
+        }
+
+        function renderHouse() {
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = '';
+            rooms.forEach(room => {
+                const isDone = visitedRooms.has(room.id);
+                const card = document.createElement('div');
+                card.className = `room-card ${isDone ? 'done' : ''}`;
+                card.innerHTML = `<div class="icon">${room.icon}</div><span>${room.title}</span>`;
+                card.onclick = () => isDone ? null : openRoom(room);
+                grid.appendChild(card);
+            });
+        }
+
+        function openRoom(room) {
+            showScreen('screen-room');
+            document.getElementById('room-detail-title').innerText = room.title;
+            document.getElementById('room-detail-icon').innerText = room.icon;
+            const list = document.getElementById('room-task-list');
+            list.innerHTML = '';
+            room.tasks.forEach(t => {
+                const b = document.createElement('button');
+                b.className = 'btn btn-accent';
+                b.innerText = t.text;
+                b.onclick = () => handleTask(room, t);
+                list.appendChild(b);
+            });
+        }
+
+        function handleTask(room, task) {
+            visitedRooms.add(room.id);
+            completedCount++;
+            totalSavings += task.val;
+            document.getElementById('val-savings').innerText = totalSavings.toFixed(2).replace('.', ',');
+            document.getElementById('val-completed').innerText = completedCount;
+            const progress = Math.min((totalSavings / 55) * 100, 100);
+            document.getElementById('val-progress-bar').style.width = progress + '%';
+            showFeedback(task);
+        }
+
+        function showFeedback(task) {
+            const box = document.getElementById('feedback-box');
+            document.getElementById('fb-title').innerText = task.val > 0 ? 'Excelente!' : 'Legal!';
+            document.getElementById('fb-msg').innerText = task.msg;
+            document.getElementById('fb-savings').innerText = `+ R$ ${task.val.toFixed(2).replace('.', ',')}`;
+            document.getElementById('fb-savings').style.color = task.val > 0 ? 'var(--success)' : '#95a5a6';
+            box.style.display = 'block';
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback-box').style.display = 'none';
+            if (completedCount === 9) finishGame();
+            else {
+                showScreen('screen-house');
+                renderHouse();
+            }
+        }
+
+        function finishGame() {
+            showScreen('screen-result');
+            document.getElementById('btn-quit').style.display = 'none';
+            let rank = totalSavings >= 50 ? "Mestre da Sustentabilidade!" : "Bom trabalho!";
+            document.getElementById('result-text').innerText = rank;
+            document.getElementById('result-monthly').innerText = `R$ ${totalSavings.toFixed(2).replace('.', ',')}`;
+            document.getElementById('result-yearly').innerText = (totalSavings * 12).toFixed(2).replace('.', ',');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tudo é Importante!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+        :root {
+            --primary: #a84191;
+            --primary-dark: #8a3578;
+            --secondary: #61c6ee;
+            --danger-color: #FF3131;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            touch-action: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #7dd3f0 0%, #61c6ee 100%);
+            font-family: 'Fredoka One', cursive;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        /* Interface Superior */
+        header {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.25);
+            z-index: 100;
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: clamp(1rem, 5vw, 1.8rem);
+            color: var(--primary);
+            text-shadow: 2px 2px 0 white;
+            text-align: left;
+            text-transform: uppercase;
+        }
+
+        .close-btn {
+            background: var(--danger-color);
+            color: white;
+            border: 2px solid white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: none;
+        }
+
+        /* Status */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .energy-bar {
+            flex-grow: 1;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            border: 3px solid var(--primary);
+            overflow: hidden;
+        }
+
+        #energy-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            transition: width 0.3s ease;
+        }
+
+        #score-val {
+            font-size: 1.2rem;
+            color: var(--primary);
+            font-weight: bold;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        /* Área do Jogo (Grelha) */
+        #game-grid {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 8px;
+            padding: 10px;
+            position: relative;
+        }
+
+        .cell {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            border: 3px solid rgba(168, 65, 145, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(30px, 8vw, 50px);
+            cursor: pointer;
+            transition: transform 0.1s;
+            position: relative;
+            touch-action: none;
+        }
+
+        .cell.selected {
+            background: rgba(168, 65, 145, 0.25);
+            transform: scale(1.1);
+            box-shadow: 0 0 12px var(--primary);
+            border-color: var(--primary);
+            z-index: 5;
+        }
+
+        /* Linha de Conexão */
+        #connector-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Ecrãs de Overlay */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #7dd3f0 0%, #61c6ee 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 500;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .btn-large {
+            background: var(--primary);
+            color: white;
+            border: 3px solid white;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-family: 'Fredoka One', cursive;
+            border-radius: 30px;
+            font-weight: bold;
+            margin-top: 10px;
+            box-shadow: 0 4px var(--primary-dark);
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-large:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px var(--primary-dark);
+        }
+
+        /* Box da Tela Inicial */
+        .instruction-box {
+            background: white; 
+            border: 5px solid var(--secondary);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            box-shadow: none;
+            max-width: 750px; 
+            width: 95%;
+        }
+
+        .instruction-box h2 {
+            font-size: clamp(1.4rem, 6vw, 2.2rem); 
+            color: var(--primary); 
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: 900;
+            line-height: 1.1;
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+            white-space: nowrap; 
+        }
+
+        @media (max-width: 480px) {
+            .instruction-box h2 {
+                white-space: normal; 
+            }
+        }
+
+        .instruction-box p {
+            font-size: clamp(1rem, 5vw, 1.5rem);
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: bold;
+            line-height: 1.4;
+            text-transform: uppercase;
+        }
+
+        .blue-highlight {
+            color: var(--primary); 
+            font-weight: 900;
+        }
+
+        #final-msg {
+            font-size: 1.1rem;
+            line-height: 1.4;
+            color: #333;
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            border: 5px solid var(--secondary);
+            margin: 20px 0;
+            text-transform: uppercase;
+            font-weight: bold;
+            max-width: 750px;
+            width: 95%;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="top-row">
+            <h1>Tudo é Importante!</h1>
+            <button class="close-btn" onclick="location.reload()">X</button>
+        </div>
+        <div class="status-container">
+            <div class="energy-bar"><div id="energy-fill"></div></div>
+            <div id="score-val">0</div>
+        </div>
+    </header>
+
+    <main id="game-grid">
+        <canvas id="connector-canvas"></canvas>
+    </main>
+
+    <!-- Tela Inicial -->
+    <div id="start-screen" class="overlay">
+        <div class="instruction-box">
+            <h2>TUDO É IMPORTANTE!</h2>
+            <p>LIGUE ITENS IGUAIS COM O DEDO OU O MOUSE. 👆</p>
+            <p><span class="blue-highlight">LEMBRE-SE</span>: O OURO VALE MAIS PONTOS, MAS AS COISAS IMPORTANTES SÃO AS MAIS SIMPLES! ❤️</p>
+        </div>
+        <button class="btn-large" onclick="startGame()">JOGAR</button>
+    </div>
+
+    <!-- Tela de Fim -->
+    <div id="end-screen" class="overlay" style="display:none;">
+        <h2 id="end-title" style="color:var(--primary); font-size: 2rem; text-transform: uppercase; text-shadow: 2px 2px 0 white;">Tempo Esgotado!</h2>
+        <div id="final-msg"></div>
+        <button class="btn-large" onclick="resetGame()">JOGAR NOVAMENTE</button>
+    </div>
+
+    <script>
+        const grid = document.getElementById('game-grid');
+        const canvas = document.getElementById('connector-canvas');
+        const ctx = canvas.getContext('2d');
+        const energyFill = document.getElementById('energy-fill');
+        const scoreVal = document.getElementById('score-val');
+        
+        const icons = {
+            life: ['🍎', '❤️', '🐶', '🌳', '🌸'],
+            gold: ['💰', '💎', '👑', '🏆']
+        };
+        const allIcons = [...icons.life, ...icons.gold];
+        
+        let score = 0;
+        let energy = 100;
+        let gameActive = false;
+        let selectedCells = [];
+        let isDragging = false;
+        let startTime = 0;
+        let totalCollected = 0;
+
+        window.onload = () => {
+            initGrid();
+            resizeCanvas();
+        };
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('end-screen').style.display = 'none';
+            score = 0;
+            energy = 100;
+            totalCollected = 0;
+            startTime = Date.now();
+            gameActive = true;
+            scoreVal.innerText = score;
+            initGrid();
+            resizeCanvas();
+            requestAnimationFrame(updateEnergy);
+        }
+
+        function initGrid() {
+            grid.querySelectorAll('.cell').forEach(c => c.remove());
+            for (let i = 0; i < 30; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.innerHTML = allIcons[Math.floor(Math.random() * allIcons.length)];
+                
+                cell.addEventListener('pointerdown', onPointerDown);
+                cell.addEventListener('pointermove', onPointerMove);
+                cell.addEventListener('pointerup', onPointerUp);
+                
+                grid.appendChild(cell);
+            }
+        }
+
+        function resizeCanvas() {
+            canvas.width = grid.clientWidth;
+            canvas.height = grid.clientHeight;
+        }
+
+        function onPointerDown(e) {
+            if (!gameActive) return;
+            isDragging = true;
+            selectCell(e.currentTarget);
+        }
+
+        function onPointerMove(e) {
+            if (!isDragging || !gameActive) return;
+            const target = document.elementFromPoint(e.clientX, e.clientY);
+            if (target && target.classList.contains('cell')) {
+                selectCell(target);
+            }
+            drawLines();
+        }
+
+        function onPointerUp() {
+            if (!isDragging) return;
+            isDragging = false;
+            checkMatch();
+            selectedCells.forEach(c => c.classList.remove('selected'));
+            selectedCells = [];
+            clearCanvas();
+        }
+
+        function selectCell(cell) {
+            if (selectedCells.includes(cell)) return;
+            
+            if (selectedCells.length > 0) {
+                const last = selectedCells[selectedCells.length - 1];
+                if (last.innerHTML !== cell.innerHTML) return;
+                
+                const idx1 = parseInt(last.dataset.index);
+                const idx2 = parseInt(cell.dataset.index);
+                const row1 = Math.floor(idx1 / 5), col1 = idx1 % 5;
+                const row2 = Math.floor(idx2 / 5), col2 = idx2 % 5;
+                if (Math.abs(row1 - row2) > 1 || Math.abs(col1 - col2) > 1) return;
+            }
+
+            cell.classList.add('selected');
+            selectedCells.push(cell);
+        }
+
+        function drawLines() {
+            clearCanvas();
+            if (selectedCells.length < 2) return;
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#a84191';
+            ctx.lineWidth = 10;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            selectedCells.forEach((cell, i) => {
+                const rect = cell.getBoundingClientRect();
+                const gridRect = grid.getBoundingClientRect();
+                const x = rect.left - gridRect.left + rect.width / 2;
+                const y = rect.top - gridRect.top + rect.height / 2;
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function checkMatch() {
+            if (selectedCells.length >= 2) {
+                const icon = selectedCells[0].innerHTML;
+                const isGold = icons.gold.includes(icon);
+                
+                totalCollected += selectedCells.length;
+
+                if (isGold) {
+                    score += selectedCells.length * 200;
+                } else {
+                    score += selectedCells.length * 50;
+                    energy = 100;
+                }
+
+                scoreVal.innerText = score;
+
+                selectedCells.forEach(cell => {
+                    cell.style.transform = 'scale(0)';
+                    setTimeout(() => {
+                        cell.innerHTML = allIcons[Math.floor(Math.random() * allIcons.length)];
+                        cell.style.transform = 'scale(1)';
+                    }, 200);
+                });
+            }
+        }
+
+        function updateEnergy() {
+            if (!gameActive) return;
+            energy -= 0.05; 
+            energyFill.style.width = Math.max(0, energy) + '%';
+
+            if (energy <= 0) {
+                endGame();
+            } else {
+                requestAnimationFrame(updateEnergy);
+            }
+        }
+
+        function endGame() {
+            gameActive = false;
+            const duration = Math.floor((Date.now() - startTime) / 1000);
+            const msgBox = document.getElementById('final-msg');
+            const endTitle = document.getElementById('end-title');
+            
+            if (totalCollected === 0) {
+                endTitle.innerText = "QUE PENA!";
+                endTitle.style.color = "#FF3131";
+                msgBox.innerHTML = "VOCÊ NÃO PEGOU NADA. VAMOS TENTAR DE NOVO?";
+            } else {
+                endTitle.innerText = "TEMPO ESGOTADO!";
+                endTitle.style.color = "#a84191";
+                msgBox.innerHTML = `PARABÉNS! VOCÊ PEGOU ${totalCollected} TESOUROS EM ${duration} SEGUNDOS!<br>TENTE PEGAR MAIS COISAS EM MENOS TEMPO.`;
+            }
+            
+            document.getElementById('end-screen').style.display = 'flex';
+        }
+
+        function resetGame() {
+            startGame();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>

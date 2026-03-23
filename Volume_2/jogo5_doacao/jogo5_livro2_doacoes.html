@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JOGO DAS DOAÇÕES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #a84191;
+            --primary-dark: #8a3578;
+            --secondary: #61c6ee;
+            --danger-color: #FF3131;
+            --box-donate: #22c55e;
+            --box-trash: #ef4444;
+            --text-dark: #2c3e50;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            text-transform: uppercase;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Fredoka One', cursive;
+            background: linear-gradient(135deg, #7dd3f0 0%, #61c6ee 100%);
+            color: var(--text-dark);
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #btn-exit {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            background: var(--danger-color);
+            border: 3px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            font-family: 'Fredoka One', cursive;
+        }
+
+        #status-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.4);
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        .stat-item {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--primary);
+            font-size: 0.75rem;
+            display: block;
+        }
+
+        #timer-area {
+            width: 100%;
+            padding: 5px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-text {
+            font-weight: 900;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        #timer-wrap {
+            flex: 1;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid white;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background: var(--secondary);
+            transition: width 0.1s linear;
+        }
+
+        .timer-warning {
+            animation: blink-timer 0.3s infinite alternate;
+        }
+
+        @keyframes blink-timer {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
+        }
+
+        #play-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 5px;
+        }
+
+        #image-container {
+            width: clamp(150px, 42vw, 200px);
+            height: clamp(150px, 42vw, 200px);
+            background: white;
+            border-radius: 25px;
+            border: 4px solid var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        #image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .item-label {
+            margin-top: 10px;
+            font-size: 1.3rem;
+            color: var(--text-dark);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 25px;
+            border-radius: 25px;
+            border: 3px solid var(--secondary);
+            text-align: center;
+            width: 90%;
+            max-width: 320px;
+        }
+
+        #boxes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 10px 15px 20px;
+            width: 100%;
+        }
+
+        .box {
+            height: clamp(75px, 14dvh, 110px);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 3px solid white;
+            transition: transform 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .box:active { transform: scale(0.92); }
+        .box-name { font-weight: 900; font-size: 1rem; color: #fff; text-align: center; line-height: 1.2; }
+
+        .box-donate { background: var(--box-donate); }
+        .box-trash { background: var(--box-trash); }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(125, 211, 240, 0.95) 0%, rgba(97, 198, 238, 0.95) 100%);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .msg-card {
+            background: white;
+            border: 5px solid var(--secondary);
+            padding: 15px 25px;
+            border-radius: 20px;
+            width: 98%;
+            max-width: 700px;
+            max-height: 98dvh;
+            overflow-y: auto;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .btn-play {
+            background: var(--primary);
+            color: white;
+            border: 3px solid white;
+            padding: 15px 50px;
+            font-size: 2rem;
+            font-family: 'Fredoka One', cursive;
+            border-radius: 60px;
+            margin-top: 15px;
+            box-shadow: 0 5px 0 var(--primary-dark), 0 8px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+
+        .btn-play:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--primary-dark);
+        }
+
+        .instructions-list {
+            text-align: left;
+            background: rgba(97, 198, 238, 0.1);
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 3px solid var(--secondary);
+            margin: 10px 0;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .instructions-list p { font-size: 1rem; margin: 0; line-height: 1.3; }
+
+        .mistake-list {
+            margin-top: 12px;
+            background: #fff5f5;
+            border: 2px solid #fecaca;
+            border-radius: 14px;
+            padding: 10px;
+        }
+
+        .mistake-list p {
+            margin: 0 0 8px;
+            color: #b91c1c;
+            font-size: 0.95rem;
+        }
+
+        .mistake-tag {
+            display: inline-block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            border-radius: 10px;
+            padding: 2px 8px;
+            margin: 3px;
+            font-size: 0.8rem;
+        }
+
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-15px); }
+            40%, 80% { transform: translateX(15px); }
+        }
+
+        .correct-flash {
+            animation: correctPulse 0.3s;
+        }
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(34, 197, 94, 0.6); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="btn-exit" onclick="location.reload()">X</div>
+
+    <div id="status-bar">
+        <div class="stat-item"><span class="stat-label">PONTOS</span><span id="score">0</span></div>
+        <div class="stat-item"><span class="stat-label">CHANCES</span><span id="lives">❤️❤️❤️</span></div>
+    </div>
+
+    <div id="timer-area">
+        <span class="timer-text">TEMPO:</span>
+        <div id="timer-wrap">
+            <div id="timer-bar"></div>
+        </div>
+    </div>
+
+    <div id="play-zone">
+        <div id="image-container"></div>
+        <div class="item-label" id="item-desc">...</div>
+    </div>
+
+    <div id="boxes-grid">
+        <div class="box box-donate" onclick="checkItem('donate')">
+            <span class="box-name">PODE SER<br>DOADO</span>
+        </div>
+        <div class="box box-trash" onclick="checkItem('trash')">
+            <span class="box-name">NÃO PODE<br>SER DOADO</span>
+        </div>
+    </div>
+</div>
+
+<div id="overlay-start" class="overlay">
+    <div class="msg-card">
+        <h2 style="color: var(--primary); font-size: 2.2rem; margin: 0;">JOGO DAS DOAÇÕES</h2>
+
+        <p style="font-size: 1.3rem; color: var(--text-dark); margin: 10px 0 5px;">SEPARE OS ITENS PARA DOÁ-LOS:</p>
+
+        <div class="instructions-list">
+            <p style="color: var(--box-donate);"><b>PODEM SER DOADOS:</b> ALIMENTOS QUE NÃO ESTRAGAM RÁPIDO, ROUPAS LIMPAS EM BOM ESTADO E BRINQUEDOS INTEIROS.</p>
+            <p style="color: var(--box-trash);"><b>NÃO PODEM SER DOADOS:</b> ALIMENTOS QUE ESTRAGAM RÁPIDO, ROUPAS SUJAS OU EM MAU ESTADO.</p>
+        </div>
+
+        <button class="btn-play" onclick="initGame()">COMEÇAR!</button>
+    </div>
+</div>
+
+<div id="overlay-over" class="overlay" style="display:none;">
+    <div class="msg-card">
+        <h2 id="end-title" style="font-size: 2.5rem; margin: 0;">FIM DE JOGO</h2>
+        <p id="end-msg" style="font-size: 1.5rem; color: var(--text-dark); margin: 15px 0;"></p>
+        <button class="btn-play" onclick="location.reload()">RECOMEÇAR</button>
+    </div>
+</div>
+
+<script>
+    /*
+     * MAPEAMENTO DE IMAGENS:
+     * Categorias: 'donate' = PODE SER DOADO, 'trash' = NÃO PODE SER DOADO
+     */
+
+    const items = [
+        // PODE SER DOADO - alimentos não perecíveis, roupas limpas, brinquedos inteiros
+        { n: 'ALIMENTO',       c: 'donate', img: 'images/industrial1.png' },
+        { n: 'ALIMENTO',       c: 'donate', img: 'images/industrial2.png' },
+        { n: 'ALIMENTO',       c: 'donate', img: 'images/industrial3.png' },
+        { n: 'ALIMENTO',       c: 'donate', img: 'images/industrial4.png' },
+        { n: 'ALIMENTO',       c: 'donate', img: 'images/industrial5.png' },
+        { n: 'ALIMENTO',       c: 'donate', img: 'images/industrial6.png' },
+        { n: 'IOGURTE',        c: 'donate', img: 'images/iogurte.png' },
+        { n: 'MACARRÃO',       c: 'donate', img: 'images/macarrao.png' },
+        { n: 'CAIXA DE OVOS',  c: 'donate', img: 'images/caixadeovos.png' },
+        { n: 'TÊNIS',          c: 'donate', img: 'images/tenislimpo.png' },
+        { n: 'ROUPAS',         c: 'donate', img: 'images/roupaslimpas.png' },
+        { n: 'SUÉTER',         c: 'donate', img: 'images/sueter.png' },
+        { n: 'BOLA',           c: 'donate', img: 'images/bola.png' },
+        { n: 'URSO',           c: 'donate', img: 'images/ursopelucia.png' },
+
+        // NÃO PODE SER DOADO - perecíveis ou sujos/em mau estado
+        { n: 'MEIAS SUJAS',    c: 'trash',  img: 'images/meiasuja.png' },
+        { n: 'CAMISETA SUJA',  c: 'trash',  img: 'images/camisetasuja.png' },
+        { n: 'CALÇA SUJA',     c: 'trash',  img: 'images/calcasuja.png' },
+        { n: 'FRUTAS',         c: 'trash',  img: 'images/frutasfrescas.png' },
+        { n: 'LEGUMES',        c: 'trash',  img: 'images/legumes.png' },
+        { n: 'PÃO',            c: 'trash',  img: 'images/pao.png' },
+        { n: 'ALFACE',         c: 'trash',  img: 'images/alface.png' },
+        { n: 'TÊNIS SUJO',     c: 'trash',  img: 'images/ttenis.png' },
+        { n: 'ROUPAS SUJAS',   c: 'trash',  img: 'images/Prancheta 5@2x.png' },
+    ];
+
+    let score = 0;
+    let lives = 3;
+    let activeItem = null;
+    let timerVal = 100;
+    let timerInt = null;
+    let gameActive = false;
+    let speed = 0.5;
+    let shuffledItems = [];
+    let currentIndex = 0;
+    let wrongDonations = [];
+
+    /* Fisher-Yates shuffle */
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function initGame() {
+        score = 0;
+        lives = 3;
+        speed = 0.5;
+        gameActive = true;
+        shuffledItems = shuffle([...items]);
+        currentIndex = 0;
+        wrongDonations = [];
+
+        document.getElementById('overlay-start').style.display = 'none';
+        document.getElementById('score').innerText = score;
+        updateLives();
+        nextRound();
+    }
+
+    function nextRound() {
+        if (!gameActive) return;
+
+        if (currentIndex >= shuffledItems.length) {
+            shuffledItems = shuffle([...items]);
+            currentIndex = 0;
+        }
+
+        activeItem = shuffledItems[currentIndex++];
+
+        const container = document.getElementById('image-container');
+        const img = new Image();
+        img.src = encodeURI(activeItem.img);
+        container.innerHTML = '';
+        container.appendChild(img);
+
+        document.getElementById('item-desc').innerText = activeItem.n;
+
+        timerVal = 100;
+        const bar = document.getElementById('timer-bar');
+        bar.classList.remove('timer-warning');
+        bar.style.backgroundColor = 'var(--secondary)';
+
+        if (timerInt) clearInterval(timerInt);
+        startTimer();
+    }
+
+    function startTimer() {
+        const bar = document.getElementById('timer-bar');
+        timerInt = setInterval(() => {
+            if (!gameActive) {
+                clearInterval(timerInt);
+                return;
+            }
+            timerVal -= speed;
+            bar.style.width = timerVal + '%';
+
+            if (timerVal > 60) bar.style.backgroundColor = '#22c55e';
+            else if (timerVal > 30) {
+                bar.style.backgroundColor = '#eab308';
+                bar.classList.remove('timer-warning');
+            } else {
+                bar.style.backgroundColor = '#ef4444';
+                bar.classList.add('timer-warning');
+            }
+
+            if (timerVal <= 0) {
+                clearInterval(timerInt);
+                wrong();
+            }
+        }, 50);
+    }
+
+    function checkItem(choice) {
+        if (!gameActive) return;
+        clearInterval(timerInt);
+        if (choice === 'donate' && activeItem.c === 'trash') {
+            wrongDonations.push(activeItem.n);
+        }
+        if (choice === activeItem.c) correct();
+        else wrong();
+    }
+
+    function correct() {
+        score += 10;
+        document.getElementById('score').innerText = score;
+        speed += 0.025;
+
+        const container = document.getElementById('image-container');
+        container.classList.add('correct-flash');
+
+        setTimeout(() => {
+            container.classList.remove('correct-flash');
+            nextRound();
+        }, 300);
+    }
+
+    function wrong() {
+        if (!gameActive) return;
+
+        lives--;
+        updateLives();
+        const container = document.getElementById('image-container');
+        container.classList.add('shake');
+
+        if (lives <= 0) {
+            gameActive = false;
+            setTimeout(endGame, 500);
+        } else {
+            setTimeout(() => {
+                container.classList.remove('shake');
+                nextRound();
+            }, 600);
+        }
+    }
+
+    function updateLives() {
+        let h = '';
+        for (let i = 0; i < 3; i++) h += (i < lives) ? '❤️' : '🖤';
+        document.getElementById('lives').innerText = h;
+    }
+
+    function endGame() {
+        if (timerInt) clearInterval(timerInt);
+
+        const title = document.getElementById('end-title');
+        const msg = document.getElementById('end-msg');
+
+        if (score > 0) {
+            title.style.color = 'var(--primary)';
+            title.innerText = 'MUITO BEM!';
+            msg.innerHTML = `VOCÊ FEZ BOAS AÇÕES E ESTÁ DE PARABÉNS!<br><b>PONTUAÇÃO FINAL: ${score}</b>`;
+        } else {
+            title.style.color = 'var(--danger-color)';
+            title.innerText = 'TENTE NOVAMENTE!';
+            msg.innerHTML = `SEPARE O QUE ESTÁ BOM PARA AJUDAR QUEM PRECISA!<br><b>PONTUAÇÃO: 0</b>`;
+        }
+
+        if (wrongDonations.length > 0) {
+            const uniqueMistakes = [...new Set(wrongDonations)];
+            const tags = uniqueMistakes.map(item => `<span class="mistake-tag">${item}</span>`).join('');
+            msg.innerHTML += `<div class="mistake-list"><p>ATENÇÃO: VOCÊ DOOU ALGUNS ITENS QUE NÃO PODERIAM SER DOADOS.</p>${tags}</div>`;
+        }
+
+        document.getElementById('overlay-over').style.display = 'flex';
+    }
+
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+</script>
+</body>
+</html>

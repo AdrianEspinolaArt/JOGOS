@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missão Empreendedora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            /* Gradiente vibrante e alegre */
+            background: linear-gradient(135deg, #845EC2, #D65DB1, #FF6F91, #FF9671, #FFC75F);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, .font-title {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            border: 4px solid #fff;
+        }
+
+        .btn-option {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid #f3f4f6;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-option:hover {
+            transform: translateY(-4px) scale(1.01);
+            border-color: #FF9671;
+            background-color: #FFF5F0;
+            box-shadow: 0 4px 12px rgba(255, 150, 113, 0.2);
+        }
+
+        .btn-option:active {
+            transform: translateY(0);
+        }
+
+        /* Animações */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .correct-anim {
+            background-color: #d1fae5 !important;
+            border-color: #059669 !important;
+            color: #065f46 !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .wrong-anim {
+            background-color: #fee2e2 !important;
+            border-color: #dc2626 !important;
+            color: #991b1b !important;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+        }
+
+        .progress-bar-container {
+            background: #e5e7eb;
+            border-radius: 999px;
+            padding: 3px;
+        }
+
+        .progress-bar {
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, #845EC2, #D65DB1);
+        }
+        
+        .start-btn {
+            background: linear-gradient(45deg, #FF6F91, #FF9671);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .start-btn:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 111, 145, 0.4);
+        }
+        
+        .option-letter {
+            background: linear-gradient(135deg, #845EC2, #D65DB1);
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <!-- Container Principal -->
+    <div id="game-container" class="game-card w-full max-w-4xl p-6 md:p-10 min-h-[600px] flex flex-col justify-between relative overflow-hidden">
+        
+        <!-- Tela Inicial -->
+        <div id="start-screen" class="text-center flex flex-col items-center justify-center h-full py-8 slide-in">
+            <div class="mb-6 p-6 bg-blue-100 rounded-full text-7xl text-blue-900 shadow-inner">
+                <!-- Ícone Foguete -->
+                <i class="fas fa-rocket"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4 leading-tight">Missão Empreendedora</h1>
+            <p class="text-gray-500 mb-10 text-xl max-w-lg mx-auto leading-relaxed">Mostre que você sabe tudo sobre transformar ideias em realidade, cuidar das finanças e proteger o planeta!</p>
+            <button onclick="startGame()" class="start-btn text-white font-bold py-5 px-12 rounded-full text-2xl shadow-xl w-full md:w-auto">
+                <i class="fas fa-play mr-2 text-sm align-middle"></i> Iniciar Jogo
+            </button>
+        </div>
+
+        <!-- Tela de Jogo -->
+        <div id="quiz-screen" class="hidden h-full flex flex-col relative">
+            
+            <!-- Botão de Sair -->
+            <button onclick="openExitModal()" class="absolute top-0 right-0 text-gray-300 hover:text-red-400 transition-colors p-2 z-20" title="Sair do Jogo">
+                <i class="fas fa-times-circle text-3xl"></i>
+            </button>
+
+            <!-- Cabeçalho -->
+            <div class="flex flex-col-reverse md:flex-row justify-between items-center mb-8 gap-4 pt-4 md:pt-0">
+                <div class="w-full md:w-auto">
+                    <span class="text-xs font-bold uppercase tracking-widest text-pink-600 bg-pink-100 px-4 py-2 rounded-full shadow-sm" id="phase-badge">Fase 1</span>
+                </div>
+                <div class="flex items-center gap-4 bg-gray-50 px-6 py-2 rounded-2xl border border-gray-100 shadow-sm mr-8 md:mr-0">
+                    <span class="text-sm font-bold text-gray-400 uppercase tracking-wide">Pontuação</span>
+                    <div class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600" id="score-display">0</div>
+                </div>
+            </div>
+
+            <!-- Barra de Progresso -->
+            <div class="progress-bar-container w-full h-4 mb-8">
+                <div id="progress-bar" class="h-full rounded-full progress-bar relative" style="width: 0%">
+                    <div class="absolute right-0 top-0 bottom-0 w-2 bg-white opacity-30 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+
+            <!-- Pergunta -->
+            <div id="question-area" class="flex-grow flex flex-col justify-center">
+                <h2 id="question-text" class="text-2xl md:text-3xl font-bold text-gray-800 mb-8 leading-snug"></h2>
+                
+                <div id="options-container" class="grid gap-4">
+                    <!-- Opções serão inseridas aqui via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela Final -->
+        <div id="end-screen" class="hidden text-center flex flex-col items-center justify-center h-full py-6 slide-in">
+            <div id="final-icon" class="text-7xl mb-6 transform hover:scale-110 transition-transform duration-300"></div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-2">Fim de Jogo!</h2>
+            <p class="text-gray-500 mb-8 text-lg">Veja como você se saiu:</p>
+            
+            <div class="bg-gray-50 rounded-3xl p-8 mb-8 w-full border-2 border-dashed border-gray-200">
+                <div class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-4" id="final-score">0</div>
+                <div class="h-1 w-20 bg-gray-200 mx-auto rounded-full mb-4"></div>
+                <p id="final-feedback" class="text-lg text-gray-700 font-medium"></p>
+            </div>
+
+            <button onclick="location.reload()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-4 px-10 rounded-2xl shadow-lg transition transform hover:-translate-y-1">
+                <i class="fas fa-redo-alt mr-2"></i> Jogar Novamente
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Modal de Feedback -->
+    <div id="feedback-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl transform scale-100 transition-all border-4 border-white animate-bounce-in">
+            <div class="text-center mb-6">
+                <div class="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4 text-4xl shadow-md" id="feedback-icon-bg">
+                    <i id="feedback-icon" class=""></i>
+                </div>
+                <h3 id="feedback-title" class="text-3xl font-bold"></h3>
+            </div>
+            <p id="feedback-text" class="text-gray-600 text-center mb-8 text-lg leading-relaxed"></p>
+            <button onclick="nextQuestion()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform hover:scale-105">
+                Próxima Pergunta <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Saída -->
+    <div id="exit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center border-4 border-white animate-bounce-in">
+            <div class="mb-4 text-yellow-500 text-5xl">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Tem certeza?</h3>
+            <p class="text-gray-600 mb-6">Se sair agora, você perderá todo o seu progresso.</p>
+            <div class="flex gap-4 justify-center">
+                <button onclick="closeExitModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl transition">
+                    Ficar
+                </button>
+                <button onclick="exitGame()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg">
+                    Sair
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados do Jogo (10 Perguntas)
+        const gameData = [
+            // FASE 1: CONCEITOS (5 Perguntas)
+            {
+                phase: "Fase 1: Teoria",
+                question: "O que é, de fato, ter um comportamento empreendedor?",
+                options: [
+                    "Apenas abrir uma loja e vender produtos.",
+                    "Identificar problemas e criar soluções criativas para ajudar as pessoas.",
+                    "Guardar todo o dinheiro que ganha num cofre.",
+                    "Esperar que os outros resolvam os problemas por você."
+                ],
+                correct: 1,
+                explanation: "Empreender é identificar problemas e criar soluções criativas para ajudar as pessoas."
+            },
+            {
+                phase: "Fase 1: Teoria",
+                question: "Qual a melhor definição para um 'Projeto'?",
+                options: [
+                    "Um plano organizado com começo, meio e fim para realizar uma ideia.",
+                    "Uma ideia solta que temos durante o sonho.",
+                    "Uma lista de desejos para o aniversário.",
+                    "Um desenho feito sem nenhum objetivo."
+                ],
+                correct: 0,
+                explanation: "Um projeto é um plano organizado com começo, meio e fim para realizar uma ideia."
+            },
+            {
+                phase: "Fase 1: Teoria",
+                question: "Educação Financeira ajuda a gente a:",
+                options: [
+                    "Comprar tudo o que vê pela frente.",
+                    "Esconder dinheiro embaixo do colchão.",
+                    "Tomar decisões inteligentes sobre como usar dinheiro e recursos.",
+                    "Nunca gastar nada, nem com o que é importante."
+                ],
+                correct: 2,
+                explanation: "Educação financeira é tomar decisões inteligentes sobre como usar dinheiro e recursos."
+            },
+            {
+                phase: "Fase 1: Teoria",
+                question: "Qual é a ordem lógica das etapas de um projeto?",
+                options: [
+                    "Apresentação -> Teste -> Criação -> Pesquisa -> Planejamento -> Ideia.",
+                    "Ideia -> Planejamento -> Pesquisa -> Criação -> Teste -> Apresentação.",
+                    "Ideia -> Criação -> Teste -> Planejamento -> Pesquisa -> Apresentação.",
+                    "Pesquisa -> Ideia -> Planejamento -> Criação -> Apresentação -> Teste."
+                ],
+                correct: 1,
+                explanation: "A ordem correta é: Ideia, Planejamento, Pesquisa, Criação, Teste e Apresentação."
+            },
+            {
+                phase: "Fase 1: Teoria",
+                question: "Como podemos empreender ajudando o planeta?",
+                options: [
+                    "Usando o máximo de plástico possível.",
+                    "Jogando materiais úteis no lixo.",
+                    "Reutilizando materiais para criar novos objetos e evitando desperdício.",
+                    "Deixando a luz acesa durante o dia."
+                ],
+                correct: 2,
+                explanation: "Podemos ajudar o planeta reutilizando materiais para criar novos objetos e evitar desperdício."
+            },
+
+            // FASE 2: NA PRÁTICA (5 Perguntas - Situações Novas)
+            {
+                phase: "Fase 2: Prática",
+                question: "Leo percebeu que a sala de aula fica muito suja de papel após o recreio e pensou: 'Precisamos resolver isso!'. Em qual etapa ele está?",
+                options: [
+                    "Ideia / Identificação do Problema",
+                    "Pesquisa",
+                    "Criação",
+                    "Apresentação"
+                ],
+                correct: 0,
+                explanation: "Leo está na fase de Ideia, pois identificou um problema e tem a intenção de resolvê-lo."
+            },
+            {
+                phase: "Fase 2: Prática",
+                question: "Amanda saiu perguntando aos colegas: 'Por que vocês deixam papel no chão? Falta lixeira?'. O que ela está fazendo?",
+                options: [
+                    "Apresentação",
+                    "Planejamento",
+                    "Pesquisa",
+                    "Teste"
+                ],
+                correct: 2,
+                explanation: "Amanda está fazendo Pesquisa para investigar a causa do problema."
+            },
+            {
+                phase: "Fase 2: Prática",
+                question: "Rui pegou um caderno e anotou: 'Vamos precisar de 3 caixas de papelão, tinta guache e cola'. Qual é essa etapa?",
+                options: [
+                    "Ideia",
+                    "Planejamento",
+                    "Criação",
+                    "Apresentação"
+                ],
+                correct: 1,
+                explanation: "Rui está na etapa de Planejamento, organizando os recursos necessários."
+            },
+            {
+                phase: "Fase 2: Prática",
+                question: "Bia e sua equipe estão pintando as caixas e colando cartazes nelas para servirem de lixeiras coloridas. Em que fase estão?",
+                options: [
+                    "Pesquisa",
+                    "Planejamento",
+                    "Criação (protótipo)",
+                    "Ideia"
+                ],
+                correct: 2,
+                explanation: "Bia está na Criação (protótipo), construindo a solução na prática."
+            },
+            {
+                phase: "Fase 2: Prática",
+                question: "Vitor foi lá na frente da turma mostrar as novas lixeiras e explicar como elas vão ajudar a manter a sala limpa. Essa é a etapa de:",
+                options: [
+                    "Planejamento",
+                    "Apresentação",
+                    "Pesquisa",
+                    "Ideia"
+                ],
+                correct: 1,
+                explanation: "Vitor está fazendo a Apresentação da solução para a turma."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAnswering = false;
+
+        // Elementos DOM
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const endScreen = document.getElementById('end-screen');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const scoreDisplay = document.getElementById('score-display');
+        const progressBar = document.getElementById('progress-bar');
+        const phaseBadge = document.getElementById('phase-badge');
+        
+        // Modal Elementos
+        const feedbackModal = document.getElementById('feedback-modal');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackText = document.getElementById('feedback-text');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackIconBg = document.getElementById('feedback-icon-bg');
+        
+        // Modal de Saída
+        const exitModal = document.getElementById('exit-modal');
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            updateScore();
+            loadQuestion();
+        }
+        
+        // Funções do Modal de Saída
+        function openExitModal() {
+            exitModal.classList.remove('hidden');
+        }
+
+        function closeExitModal() {
+            exitModal.classList.add('hidden');
+        }
+
+        function exitGame() {
+            closeExitModal();
+            quizScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        function loadQuestion() {
+            isAnswering = true;
+            const data = gameData[currentQuestionIndex];
+            
+            // Atualizar UI
+            phaseBadge.innerText = data.phase;
+            // Muda a cor do badge dependendo da fase
+            if (data.phase.includes("Fase 2")) {
+                phaseBadge.className = "text-xs font-bold uppercase tracking-widest text-purple-600 bg-purple-100 px-4 py-2 rounded-full shadow-sm";
+            } else {
+                phaseBadge.className = "text-xs font-bold uppercase tracking-widest text-pink-600 bg-pink-100 px-4 py-2 rounded-full shadow-sm";
+            }
+            
+            questionText.innerText = data.question;
+            
+            // Barra de Progresso
+            const progress = ((currentQuestionIndex) / gameData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            // Limpar e criar opções
+            optionsContainer.innerHTML = '';
+            
+            // Animação de entrada
+            const containerDiv = document.getElementById('question-area');
+            containerDiv.classList.remove('slide-in');
+            void containerDiv.offsetWidth; // Trigger reflow
+            containerDiv.classList.add('slide-in');
+
+            data.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option w-full text-left p-5 rounded-2xl text-gray-700 font-bold text-lg flex items-center shadow-sm';
+                
+                // Ícone de letra
+                const letter = String.fromCharCode(65 + index);
+                btn.innerHTML = `<span class="option-letter w-10 h-10 rounded-xl flex items-center justify-center mr-4 text-base font-black shrink-0">${letter}</span> <span class="leading-tight text-sm md:text-lg">${option}</span>`;
+                
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if (!isAnswering) return;
+            isAnswering = false;
+
+            const data = gameData[currentQuestionIndex];
+            const isCorrect = selectedIndex === data.correct;
+
+            // Visual no botão
+            if (isCorrect) {
+                btnElement.classList.add('correct-anim');
+                score += 10; // Cada acerto vale 10 pontos
+                showFeedback(true, data.explanation);
+            } else {
+                btnElement.classList.add('wrong-anim');
+                // Destacar o correto
+                const correctBtn = optionsContainer.children[data.correct];
+                correctBtn.classList.add('correct-anim');
+                showFeedback(false, data.explanation);
+            }
+            updateScore();
+        }
+
+        function showFeedback(isCorrect, explanation) {
+            feedbackModal.classList.remove('hidden');
+            
+            if (isCorrect) {
+                feedbackTitle.innerText = "Mandou bem!";
+                feedbackTitle.className = "text-3xl font-bold text-green-600";
+                feedbackText.innerHTML = explanation;
+                
+                feedbackIcon.className = "fas fa-check text-white";
+                feedbackIconBg.className = "mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4 text-4xl shadow-lg bg-green-500 animate-pulse";
+            } else {
+                feedbackTitle.innerText = "Que pena!";
+                feedbackTitle.className = "text-3xl font-bold text-red-500";
+                // Correção solicitada: remover "A resposta correta é" e mostrar apenas a explicação
+                feedbackText.innerHTML = explanation;
+                
+                feedbackIcon.className = "fas fa-times text-white";
+                feedbackIconBg.className = "mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4 text-4xl shadow-lg bg-red-500";
+            }
+        }
+
+        function nextQuestion() {
+            feedbackModal.classList.add('hidden');
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < gameData.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function updateScore() {
+            scoreDisplay.innerText = score;
+        }
+
+        function endGame() {
+            quizScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            const finalScoreEl = document.getElementById('final-score');
+            const finalFeedbackEl = document.getElementById('final-feedback');
+            const finalIconEl = document.getElementById('final-icon');
+
+            // Animação de contagem
+            let currentDisplayScore = 0;
+            // Se o score for 0, não roda o intervalo
+            if(score === 0) {
+                 finalScoreEl.innerText = 0;
+            } else {
+                const timer = setInterval(() => {
+                    currentDisplayScore += 1;
+                    if(currentDisplayScore >= score) {
+                        currentDisplayScore = score;
+                        clearInterval(timer);
+                    }
+                    finalScoreEl.innerText = currentDisplayScore;
+                }, 20);
+            }
+
+            // Pontuação final (Máximo 100)
+            
+            if (score === 100) {
+                finalIconEl.innerHTML = '<i class="fas fa-trophy text-yellow-400 drop-shadow-lg"></i>';
+                finalFeedbackEl.innerHTML = "<strong>Incrível!</strong> Você acertou tudo! Já pensa como um verdadeiro empreendedor: com planejamento e responsabilidade!";
+            } else if (score >= 60) {
+                finalIconEl.innerHTML = '<i class="fas fa-star text-blue-400 drop-shadow-lg"></i>';
+                finalFeedbackEl.innerHTML = "<strong>Muito bom!</strong> Você entendeu bem os conceitos. Lembre-se: planejar e pesquisar são segredos do sucesso.";
+            } else if (score === 0) {
+                // Feedback específico para score 0
+                finalIconEl.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 drop-shadow-lg"></i>';
+                finalFeedbackEl.innerHTML = "<strong>Mais atenção!</strong> Procure ler o material novamente. Empreender exige foco!";
+            } else {
+                finalIconEl.innerHTML = '<i class="fas fa-book-reader text-orange-400 drop-shadow-lg"></i>';
+                finalFeedbackEl.innerHTML = "<strong>Bom esforço!</strong> Que tal revisar as etapas de um projeto? Empreender é praticar!";
+            }
+        }
+    </script>
+</body>
+</html>

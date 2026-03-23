@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NECESSIDADES E DESEJOS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #623f92;
+            --primary-dark: #4a2e6e;
+            --secondary: #ed6b1c;
+            --danger-color: #FF3131;
+            --success-color: #22c55e;
+            --text-dark: #2c3e50;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+            text-transform: uppercase;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Fredoka One', cursive;
+            background: linear-gradient(135deg, #8b6bbf 0%, #623f92 100%);
+            color: var(--text-dark);
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #btn-exit {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            background: var(--danger-color);
+            border: 3px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* ── HEADER ── */
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.25);
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        #header .title {
+            font-size: 1rem;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        #timer-display {
+            font-size: 1rem;
+            color: white;
+            background: var(--secondary);
+            padding: 4px 14px;
+            border-radius: 20px;
+            border: 2px solid white;
+        }
+
+        #progress-bar-wrap {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.3);
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--success-color);
+            transition: width 0.4s ease;
+        }
+
+        /* ── DROP ZONES (TOP) ── */
+        #drop-zones {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 8px 10px;
+        }
+
+        .drop-zone {
+            height: clamp(90px, 16dvh, 130px);
+            border-radius: 18px;
+            border: 4px dashed rgba(255,255,255,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s, border-color 0.15s, background 0.15s;
+            position: relative;
+        }
+
+        .drop-zone .zone-label {
+            font-size: 1rem;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        .drop-zone .zone-count {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.8);
+            margin-top: 2px;
+            pointer-events: none;
+        }
+
+        .zone-need {
+            background: rgba(34, 197, 94, 0.35);
+        }
+
+        .zone-want {
+            background: rgba(237, 107, 28, 0.35);
+        }
+
+        .drop-zone.drag-over {
+            transform: scale(1.04);
+            border-color: white;
+        }
+
+        .zone-need.drag-over {
+            background: rgba(34, 197, 94, 0.65);
+        }
+
+        .zone-want.drag-over {
+            background: rgba(237, 107, 28, 0.65);
+        }
+
+        /* ── ITEMS AREA ── */
+        #items-area {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .drag-item {
+            width: clamp(80px, 22vw, 100px);
+            height: clamp(80px, 22vw, 100px);
+            background: white;
+            border-radius: 18px;
+            border: 3px solid var(--secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.15s, opacity 0.3s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .drag-item:active { cursor: grabbing; }
+
+        .drag-item .item-emoji {
+            font-size: 2.2rem;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .drag-item .item-name {
+            font-size: 0.6rem;
+            color: var(--text-dark);
+            margin-top: 3px;
+            text-align: center;
+            line-height: 1.1;
+            pointer-events: none;
+        }
+
+        .drag-item.dragging {
+            opacity: 0.6;
+            transform: scale(1.1);
+            z-index: 9999;
+        }
+
+        .drag-item.correct {
+            animation: itemCorrect 0.4s forwards;
+        }
+
+        @keyframes itemCorrect {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .drag-item.wrong {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-12px); }
+            40%, 80% { transform: translateX(12px); }
+        }
+
+        /* ── OVERLAYS ── */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(139, 107, 191, 0.95) 0%, rgba(98, 63, 146, 0.95) 100%);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .msg-card {
+            background: white;
+            border: 5px solid var(--secondary);
+            padding: 20px 25px;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 500px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .msg-card h2 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin: 0 0 10px;
+        }
+
+        .msg-card p {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .btn-play {
+            background: var(--primary);
+            color: white;
+            border: 3px solid white;
+            padding: 14px 45px;
+            font-size: 1.6rem;
+            font-family: 'Fredoka One', cursive;
+            border-radius: 60px;
+            margin-top: 15px;
+            box-shadow: 0 5px 0 var(--primary-dark), 0 8px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-play:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--primary-dark);
+        }
+
+        .instructions-box {
+            background: rgba(98, 63, 146, 0.08);
+            border: 3px solid var(--secondary);
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            text-align: left;
+        }
+
+        .instructions-box p {
+            font-size: 0.95rem;
+            margin: 6px 0;
+        }
+
+        /* ── GHOST (dragging clone) ── */
+        #drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            display: none;
+            width: clamp(80px, 22vw, 100px);
+            height: clamp(80px, 22vw, 100px);
+            background: white;
+            border-radius: 18px;
+            border: 3px solid var(--secondary);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transform: translate(-50%, -50%);
+        }
+
+        #drag-ghost .item-emoji {
+            font-size: 2.2rem;
+            line-height: 1;
+        }
+
+        #drag-ghost .item-name {
+            font-size: 0.6rem;
+            color: var(--text-dark);
+            margin-top: 3px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="btn-exit" onclick="location.reload()">X</div>
+
+    <div id="header">
+        <span class="title">NECESSIDADES E DESEJOS</span>
+        <span id="timer-display">00:00</span>
+    </div>
+    <div id="progress-bar-wrap">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div id="drop-zones">
+        <div class="drop-zone zone-need" data-zone="need">
+            <span class="zone-label">NECESSIDADE</span>
+            <span class="zone-count" id="count-need">0/0</span>
+        </div>
+        <div class="drop-zone zone-want" data-zone="want">
+            <span class="zone-label">DESEJO</span>
+            <span class="zone-count" id="count-want">0/0</span>
+        </div>
+    </div>
+
+    <div id="items-area"></div>
+</div>
+
+<div id="drag-ghost"></div>
+
+<!-- TELA INICIAL -->
+<div id="overlay-start" class="overlay">
+    <div class="msg-card">
+        <h2>NECESSIDADES E DESEJOS</h2>
+        <p>ARRASTE CADA ITEM PARA A CAIXA CORRETA!</p>
+
+        <div class="instructions-box">
+            <p><b style="color: var(--success-color);">NECESSIDADE:</b> COISAS QUE PRECISAMOS PARA VIVER BEM (COMIDA, MORADIA, SAÚDE, ESCOLA…).</p>
+            <p><b style="color: var(--secondary);">DESEJO:</b> COISAS QUE QUEREMOS, MAS NÃO SÃO ESSENCIAIS (VIDEOGAME, BRINQUEDO, DOCES…).</p>
+        </div>
+
+        <button class="btn-play" onclick="initGame()">COMEÇAR!</button>
+    </div>
+</div>
+
+<!-- TELA FINAL -->
+<div id="overlay-end" class="overlay" style="display:none;">
+    <div class="msg-card">
+        <h2 id="end-title">PARABÉNS!</h2>
+        <p id="end-msg"></p>
+        <button class="btn-play" onclick="location.reload()">JOGAR NOVAMENTE</button>
+    </div>
+</div>
+
+<script>
+    /* ═══════════════════════════════════════════
+     *  ITENS DO JOGO
+     *  Troque 'emoji' por um <img> quando tiver as imagens.
+     *  category: 'need' = NECESSIDADE, 'want' = DESEJO
+     * ═══════════════════════════════════════════ */
+    const allItems = [
+        // NECESSIDADES
+        { name: 'ÁGUA',       emoji: '💧', category: 'need' },
+        { name: 'ARROZ',      emoji: '🍚', category: 'need' },
+        { name: 'FRUTAS',     emoji: '🍎', category: 'need' },
+        { name: 'CASA',       emoji: '🏠', category: 'need' },
+        { name: 'REMÉDIO',    emoji: '💊', category: 'need' },
+        { name: 'ESCOLA',     emoji: '🏫', category: 'need' },
+        { name: 'ROUPA',      emoji: '👕', category: 'need' },
+        { name: 'LEITE',      emoji: '🥛', category: 'need' },
+
+        // DESEJOS
+        { name: 'VIDEOGAME',  emoji: '🎮', category: 'want' },
+        { name: 'BRINQUEDO',  emoji: '🧸', category: 'want' },
+        { name: 'DOCE',       emoji: '🍬', category: 'want' },
+        { name: 'SORVETE',    emoji: '🍦', category: 'want' },
+        { name: 'TABLET',     emoji: '📱', category: 'want' },
+        { name: 'TÊNIS CARO', emoji: '👟', category: 'want' },
+        { name: 'BONECA',     emoji: '🪆', category: 'want' },
+        { name: 'BICICLETA',  emoji: '🚲', category: 'want' },
+    ];
+
+    /* ── STATE ── */
+    let gameItems = [];
+    let placed = { need: 0, want: 0 };
+    let totalNeed = 0;
+    let totalWant = 0;
+    let totalItems = 0;
+    let timerSec = 0;
+    let timerInt = null;
+    let gameActive = false;
+
+    /* ── DRAG STATE ── */
+    let dragEl = null;
+    let dragData = null;
+    let ghost = null;
+
+    /* ── AUDIO (Web Audio API tiny beeps) ── */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playBell() {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(880, audioCtx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.1);
+        g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function playBuzz() {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(150, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.3);
+    }
+
+    /* ── SHUFFLE (Fisher-Yates) ── */
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    /* ── INIT ── */
+    function initGame() {
+        document.getElementById('overlay-start').style.display = 'none';
+        audioCtx.resume();
+
+        gameItems = shuffle([...allItems]);
+        totalNeed = gameItems.filter(i => i.category === 'need').length;
+        totalWant = gameItems.filter(i => i.category === 'want').length;
+        totalItems = gameItems.length;
+        placed = { need: 0, want: 0 };
+        timerSec = 0;
+        gameActive = true;
+
+        updateCounts();
+        updateProgress();
+        renderItems();
+        startTimer();
+    }
+
+    function renderItems() {
+        const area = document.getElementById('items-area');
+        area.innerHTML = '';
+
+        gameItems.forEach((item, idx) => {
+            const el = document.createElement('div');
+            el.className = 'drag-item';
+            el.dataset.index = idx;
+            el.innerHTML = `<span class="item-emoji">${item.emoji}</span><span class="item-name">${item.name}</span>`;
+
+            /* TOUCH events */
+            el.addEventListener('touchstart', onTouchStart, { passive: false });
+            el.addEventListener('touchmove', onTouchMove, { passive: false });
+            el.addEventListener('touchend', onTouchEnd, { passive: false });
+
+            /* MOUSE events (desktop) */
+            el.addEventListener('mousedown', onMouseDown);
+
+            area.appendChild(el);
+        });
+    }
+
+    /* ── TIMER ── */
+    function startTimer() {
+        const display = document.getElementById('timer-display');
+        timerInt = setInterval(() => {
+            if (!gameActive) return;
+            timerSec++;
+            const m = String(Math.floor(timerSec / 60)).padStart(2, '0');
+            const s = String(timerSec % 60).padStart(2, '0');
+            display.textContent = m + ':' + s;
+        }, 1000);
+    }
+
+    function updateCounts() {
+        document.getElementById('count-need').textContent = placed.need + '/' + totalNeed;
+        document.getElementById('count-want').textContent = placed.want + '/' + totalWant;
+    }
+
+    function updateProgress() {
+        const done = placed.need + placed.want;
+        const pct = totalItems > 0 ? (done / totalItems) * 100 : 0;
+        document.getElementById('progress-bar').style.width = pct + '%';
+    }
+
+    /* ════════════════════════════════════
+     *   TOUCH DRAG
+     * ════════════════════════════════════ */
+    function onTouchStart(e) {
+        if (!gameActive) return;
+        e.preventDefault();
+        const el = e.currentTarget;
+        const touch = e.touches[0];
+
+        dragEl = el;
+        dragData = gameItems[parseInt(el.dataset.index)];
+        el.classList.add('dragging');
+
+        ghost = document.getElementById('drag-ghost');
+        ghost.innerHTML = el.innerHTML;
+        ghost.style.display = 'flex';
+        ghost.style.left = touch.clientX + 'px';
+        ghost.style.top = touch.clientY + 'px';
+    }
+
+    function onTouchMove(e) {
+        if (!dragEl) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        ghost.style.left = touch.clientX + 'px';
+        ghost.style.top = touch.clientY + 'px';
+
+        highlightZoneUnder(touch.clientX, touch.clientY);
+    }
+
+    function onTouchEnd(e) {
+        if (!dragEl) return;
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        ghost.style.display = 'none';
+        dragEl.classList.remove('dragging');
+
+        const zone = getZoneUnder(touch.clientX, touch.clientY);
+        if (zone) handleDrop(zone);
+        else resetDrag();
+
+        clearHighlights();
+        dragEl = null;
+        dragData = null;
+    }
+
+    /* ════════════════════════════════════
+     *   MOUSE DRAG
+     * ════════════════════════════════════ */
+    function onMouseDown(e) {
+        if (!gameActive) return;
+        e.preventDefault();
+        const el = e.currentTarget;
+
+        dragEl = el;
+        dragData = gameItems[parseInt(el.dataset.index)];
+        el.classList.add('dragging');
+
+        ghost = document.getElementById('drag-ghost');
+        ghost.innerHTML = el.innerHTML;
+        ghost.style.display = 'flex';
+        ghost.style.left = e.clientX + 'px';
+        ghost.style.top = e.clientY + 'px';
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }
+
+    function onMouseMove(e) {
+        if (!dragEl) return;
+        ghost.style.left = e.clientX + 'px';
+        ghost.style.top = e.clientY + 'px';
+        highlightZoneUnder(e.clientX, e.clientY);
+    }
+
+    function onMouseUp(e) {
+        if (!dragEl) return;
+        ghost.style.display = 'none';
+        dragEl.classList.remove('dragging');
+
+        const zone = getZoneUnder(e.clientX, e.clientY);
+        if (zone) handleDrop(zone);
+        else resetDrag();
+
+        clearHighlights();
+        dragEl = null;
+        dragData = null;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+
+    /* ── DROP ZONE HELPERS ── */
+    function getZoneUnder(x, y) {
+        const zones = document.querySelectorAll('.drop-zone');
+        for (const z of zones) {
+            const r = z.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                return z.dataset.zone;
+            }
+        }
+        return null;
+    }
+
+    function highlightZoneUnder(x, y) {
+        const zones = document.querySelectorAll('.drop-zone');
+        zones.forEach(z => {
+            const r = z.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                z.classList.add('drag-over');
+            } else {
+                z.classList.remove('drag-over');
+            }
+        });
+    }
+
+    function clearHighlights() {
+        document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+    }
+
+    /* ── HANDLE DROP ── */
+    function handleDrop(zone) {
+        if (!dragData || !dragEl) return;
+
+        if (zone === dragData.category) {
+            /* ACERTOU */
+            playBell();
+            placed[zone]++;
+            updateCounts();
+            updateProgress();
+
+            dragEl.classList.add('correct');
+            dragEl.style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                dragEl.style.display = 'none';
+                checkWin();
+            }, 400);
+        } else {
+            /* ERROU */
+            playBuzz();
+            dragEl.classList.add('wrong');
+            setTimeout(() => dragEl.classList.remove('wrong'), 500);
+        }
+    }
+
+    function resetDrag() {
+        /* item volta ao lugar — nada a fazer, já está lá */
+    }
+
+    /* ── VICTORY ── */
+    function checkWin() {
+        if (placed.need + placed.want >= totalItems) {
+            gameActive = false;
+            clearInterval(timerInt);
+
+            const min = Math.floor(timerSec / 60);
+            const sec = timerSec % 60;
+            let tempoStr = '';
+            if (min > 0) {
+                tempoStr = min + (min === 1 ? ' MINUTO' : ' MINUTOS');
+                if (sec > 0) tempoStr += ' E ' + sec + (sec === 1 ? ' SEGUNDO' : ' SEGUNDOS');
+            } else {
+                tempoStr = sec + (sec === 1 ? ' SEGUNDO' : ' SEGUNDOS');
+            }
+
+            setTimeout(() => {
+                document.getElementById('end-title').textContent = 'PARABÉNS!';
+                document.getElementById('end-msg').innerHTML = 'VOCÊ TERMINOU EM ' + tempoStr + '!';
+                document.getElementById('overlay-end').style.display = 'flex';
+            }, 500);
+        }
+    }
+
+    /* ── PREVENT ZOOM ── */
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+</script>
+</body>
+</html>

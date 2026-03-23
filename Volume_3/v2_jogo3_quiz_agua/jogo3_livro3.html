@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QUIZ SOBRE ECONOMIA DE ÁGUA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #623f92;
+            --primary-dark: #4a2e6e;
+            --secondary: #ed6b1c;
+            --bg-gradient: linear-gradient(135deg, #8b6bbf 0%, #623f92 100%);
+            --danger-color: #FF3131;
+            --success-color: #22c55e;
+        }
+
+        html, body { height: 100%; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Fredoka One', cursive, sans-serif;
+            background: var(--bg-gradient);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            color: var(--primary);
+            text-transform: uppercase;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .hidden { display: none !important; }
+
+        /* ── CLOSE ── */
+        #btn-exit {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            background: var(--danger-color);
+            border: 3px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .screen {
+            width: 95%;
+            max-width: 650px;
+            padding: 25px 20px;
+            box-sizing: border-box;
+            animation: fadeIn 0.5s ease;
+            background: white;
+            border-radius: 30px;
+            border: 6px solid var(--secondary);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-title {
+            margin: 0 0 10px;
+            font-size: 1.8rem;
+            color: var(--primary);
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.08);
+        }
+
+        .btn-primary {
+            padding: 14px 40px;
+            font-family: inherit;
+            font-size: 1.3rem;
+            background-color: var(--primary);
+            color: white;
+            border: 3px solid white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 var(--primary-dark), 0 8px 15px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        .btn-primary:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--primary-dark);
+        }
+
+        .instructions-box {
+            background: rgba(98,63,146,0.08);
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 3px solid var(--secondary);
+            margin: 12px 0 20px;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .emoji-big {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 10px;
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* ── HEADER BAR ── */
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            background: white;
+            padding: 10px 16px;
+            border-radius: 50px;
+            border: 3px solid var(--secondary);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.06);
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin: 10px 0 15px;
+            min-height: 40px;
+            line-height: 1.4;
+        }
+
+        /* ── PHOTOS GRID ── */
+        .photos-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .photo-option {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 4px solid #e0e0e0;
+            transition: all 0.3s;
+            aspect-ratio: 4/3;
+            background: #f5f5f5;
+        }
+
+        .photo-option:active {
+            transform: scale(0.96);
+        }
+
+        .photo-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+
+        .photo-label {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-family: 'Fredoka One', cursive;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        .photo-option.correct {
+            border-color: var(--success-color);
+            box-shadow: 0 0 0 3px rgba(34,197,94,0.4);
+        }
+
+        .photo-option.wrong {
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 3px rgba(255,49,49,0.3);
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        /* ── FEEDBACK ── */
+        .feedback-box {
+            min-height: 50px;
+            padding: 8px 12px;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin-top: 8px;
+            transition: all 0.3s;
+        }
+
+        .feedback-box.success {
+            background: #dcfce7;
+            border: 3px solid var(--success-color);
+            color: #166534;
+        }
+
+        .feedback-box.error {
+            background: #fee2e2;
+            border: 3px solid var(--danger-color);
+            color: #991b1b;
+        }
+
+        .feedback-box.empty {
+            background: transparent;
+            border: 3px solid transparent;
+            color: transparent;
+        }
+
+        /* ── FINAL ── */
+        .trophy { font-size: 4.5rem; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 12px gold); }
+        .final-title { font-size: 2rem; color: var(--success-color); margin: 0 0 12px; }
+        .final-message { font-size: 1rem; color: #555; line-height: 1.6; margin-bottom: 20px; }
+        .final-score-number { font-size: 2.5rem; color: var(--primary); }
+
+        @media (max-width: 500px) {
+            .screen { padding: 18px 12px; }
+            .game-title { font-size: 1.5rem; }
+            .question-text { font-size: 0.95rem; }
+            .btn-primary { padding: 12px 30px; font-size: 1.1rem; }
+            .header-bar { font-size: 0.8rem; padding: 8px 12px; }
+            .photo-label { width: 26px; height: 26px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="btn-exit" onclick="location.reload()">X</div>
+
+<!-- ═══════════ TELA INICIAL ═══════════ -->
+<div id="start-screen" class="screen">
+    <span class="emoji-big">💧</span>
+    <h1 class="game-title">QUIZ SOBRE ECONOMIA DE ÁGUA</h1>
+    <div class="instructions-box">
+        CLIQUE NA LETRA QUE REPRESENTA A ATITUDE CORRETA PARA ECONOMIZAR ÁGUA.
+    </div>
+    <button class="btn-primary" onclick="startGame()">COMEÇAR!</button>
+</div>
+
+<!-- ═══════════ TELA DO JOGO ═══════════ -->
+<div id="game-screen" class="screen hidden">
+    <div class="header-bar">
+        <div>PERGUNTA: <span id="current-step">1/6</span></div>
+        <div>ACERTOS: <span id="score-display" style="color: var(--success-color);">0</span></div>
+    </div>
+
+    <p id="question-text" class="question-text">CARREGANDO...</p>
+
+    <div id="photos-container" class="photos-container"></div>
+
+    <div id="feedback-box" class="feedback-box empty">&nbsp;</div>
+</div>
+
+<!-- ═══════════ TELA FINAL ═══════════ -->
+<div id="final-screen" class="screen hidden">
+    <span class="trophy">🏆</span>
+    <h2 class="final-title">PARABÉNS!</h2>
+    <p class="final-message">
+        VOCÊ AJUDOU AS PESSOAS A ECONOMIZAREM ÁGUA!<br><br>
+        VOCÊ ACERTOU <span id="final-score" class="final-score-number">0</span> DE 6!
+    </p>
+    <button class="btn-primary" onclick="location.reload()">JOGAR NOVAMENTE</button>
+</div>
+
+<script>
+    /* ════════════════════════════════════════
+     *  DADOS DO QUIZ – ECONOMIA DE ÁGUA
+     *  Cada pergunta tem 2 fotos (A e B).
+     *  answer: 'A' ou 'B' indica a correta.
+     * ════════════════════════════════════════ */
+    const questions = [
+        {
+            text: "QUAL ATITUDE AJUDA A ECONOMIZAR ÁGUA?",
+            imgA: "Foto1_jogo2_2ano.jpg",
+            imgB: "Foto2_jogo2_2ano.jpg",
+            answer: "B",
+            successMsg: "ISSO MESMO! FECHE A TORNEIRA ENQUANTO ENSABOA A MÃO.",
+            errorMsg: "VOCÊ SE CONFUNDIU. TENTE NOVAMENTE."
+        },
+        {
+            text: "QUAL ATITUDE AJUDA A ECONOMIZAR ÁGUA?",
+            imgA: "Foto3_jogo2_2ano.jpg",
+            imgB: "Foto4_jogo2_2ano.jpg",
+            answer: "A",
+            successMsg: "ISSO MESMO! USE UM COPO E NÃO DEIXE A TORNEIRA ABERTA ENQUANTO ESCOVA OS DENTES.",
+            errorMsg: "VOCÊ SE CONFUNDIU. TENTE NOVAMENTE."
+        },
+        {
+            text: "QUAL ATITUDE AJUDA A ECONOMIZAR ÁGUA?",
+            imgA: "Foto5_jogo2_2ano.jpg",
+            imgB: "Foto6_jogo2_2ano.jpg",
+            answer: "B",
+            successMsg: "ISSO MESMO! FECHE A TORNEIRA ENQUANTO ENSABOA OS PRATOS.",
+            errorMsg: "VOCÊ SE CONFUNDIU. TENTE NOVAMENTE."
+        },
+        {
+            text: "QUAL ATITUDE AJUDA A ECONOMIZAR ÁGUA?",
+            imgA: "Foto7_jogo2_2ano.jpg",
+            imgB: "Foto8_jogo2_2ano.jpg",
+            answer: "A",
+            successMsg: "ISSO MESMO! PREFIRA O REGADOR EM VEZ DA MANGUEIRA!",
+            errorMsg: "VOCÊ SE CONFUNDIU. TENTE NOVAMENTE."
+        },
+        {
+            text: "QUAL ATITUDE AJUDA A ECONOMIZAR ÁGUA?",
+            imgA: "Foto9_jogo2_2ano.jpg",
+            imgB: "Foto10_jogo2_2ano.jpg",
+            answer: "A",
+            successMsg: "ISSO MESMO! A VASSOURA NÃO GASTA NADA DE ÁGUA. EVITE A MANGUEIRA.",
+            errorMsg: "VOCÊ SE CONFUNDIU. TENTE NOVAMENTE."
+        },
+        {
+            text: "QUAL ATITUDE AJUDA A ECONOMIZAR ÁGUA?",
+            imgA: "Foto11_jogo2_2ano.jpg",
+            imgB: "Foto12_jogo2_2ano.jpg",
+            answer: "B",
+            successMsg: "ISSO MESMO! LIMPAR O CARRO COM PANO É MUITO MAIS ECONÔMICO.",
+            errorMsg: "VOCÊ SE CONFUNDIU. TENTE NOVAMENTE."
+        }
+    ];
+
+    /* ── STATE ── */
+    let currentQ = 0;
+    let score = 0;
+    let locked = false;
+
+    /* ── AUDIO ── */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playBell() {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(880, audioCtx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.1);
+        g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function playBuzz() {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(150, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.3);
+    }
+
+    /* ── START ── */
+    function startGame() {
+        audioCtx.resume();
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    /* ── SHOW QUESTION ── */
+    function showQuestion() {
+        locked = false;
+        const q = questions[currentQ];
+
+        document.getElementById('question-text').textContent = q.text;
+        document.getElementById('current-step').textContent = `${currentQ + 1}/${questions.length}`;
+
+        const fb = document.getElementById('feedback-box');
+        fb.className = 'feedback-box empty';
+        fb.innerHTML = '&nbsp;';
+
+        const container = document.getElementById('photos-container');
+        container.innerHTML = '';
+
+        // Photo A
+        const divA = document.createElement('div');
+        divA.className = 'photo-option';
+        divA.innerHTML = `<img src="${q.imgA}" alt="Opção A"><div class="photo-label">A</div>`;
+        divA.addEventListener('click', () => checkAnswer('A', divA));
+
+        // Photo B
+        const divB = document.createElement('div');
+        divB.className = 'photo-option';
+        divB.innerHTML = `<img src="${q.imgB}" alt="Opção B"><div class="photo-label">B</div>`;
+        divB.addEventListener('click', () => checkAnswer('B', divB));
+
+        container.appendChild(divA);
+        container.appendChild(divB);
+    }
+
+    /* ── CHECK ANSWER ── */
+    function checkAnswer(choice, element) {
+        if (locked) return;
+        const q = questions[currentQ];
+        const fb = document.getElementById('feedback-box');
+
+        if (choice === q.answer) {
+            /* ACERTOU */
+            locked = true;
+            playBell();
+            score++;
+            document.getElementById('score-display').textContent = score;
+
+            element.classList.add('correct');
+            fb.className = 'feedback-box success';
+            fb.textContent = q.successMsg;
+
+            setTimeout(() => {
+                currentQ++;
+                if (currentQ < questions.length) {
+                    showQuestion();
+                } else {
+                    showFinal();
+                }
+            }, 2500);
+        } else {
+            /* ERROU */
+            playBuzz();
+            element.classList.add('wrong');
+            fb.className = 'feedback-box error';
+            fb.textContent = q.errorMsg;
+
+            setTimeout(() => {
+                element.classList.remove('wrong');
+                fb.className = 'feedback-box empty';
+                fb.innerHTML = '&nbsp;';
+            }, 1200);
+        }
+    }
+
+    /* ── FINAL ── */
+    function showFinal() {
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('final-screen').classList.remove('hidden');
+        document.getElementById('final-score').textContent = score;
+    }
+
+    /* ── PREVENT ZOOM ── */
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+</script>
+</body>
+</html>

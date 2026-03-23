@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mestre da Festa - Super Colorido</title>
+    <style>
+        :root {
+            --neon-purple: #623f92;
+            --neon-pink: #ed6b1c;
+            --neon-yellow: #ed6b1c;
+            --neon-blue: #8b6bb5;
+            --dark-bg: #3a2460;
+            --text-dark: #000000;
+            --text-light: #ffffff;
+            --success-vibrant: #39ff14;
+            --danger-vibrant: #ff3131;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial Black', Gadget, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            background-image: radial-gradient(circle at 50% 50%, #4a2e6e 0%, #3a2460 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--text-light);
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 600px;
+            height: 95vh;
+            background: #ffffff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border-radius: 30px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 6px solid var(--neon-purple);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            color: white;
+            padding: 15px 60px 15px 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 10;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.85rem;
+            border: 2px solid var(--neon-yellow);
+            color: var(--neon-yellow);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--danger-vibrant);
+            border: 3px solid white;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.4rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+        }
+
+        .screen {
+            flex: 1;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            overflow-y: auto;
+            color: var(--text-dark);
+            background: #fff;
+        }
+
+        .screen.active { display: flex; }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--neon-purple);
+            text-shadow: 2px 2px 0px var(--neon-yellow);
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.3;
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .budget-info {
+            background: #fef0e5;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 2px dashed #ed6b1c;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .btn {
+            background: var(--neon-yellow);
+            color: var(--text-dark);
+            border: 4px solid var(--text-dark);
+            padding: 18px 25px;
+            border-radius: 20px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 6px 6px 0px var(--text-dark);
+            width: 90%;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .btn:active { transform: translate(3px, 3px); box-shadow: 3px 3px 0px var(--text-dark); }
+        .btn-confirm { background: var(--success-vibrant); }
+
+        .items-grid { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+        .item-card {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 4px solid #ccc;
+            cursor: pointer;
+        }
+        .item-card.selected { border-color: var(--neon-purple); background: #e8d9f5; }
+        .item-emoji { font-size: 2.5rem; margin-right: 12px; }
+        .item-info { text-align: left; flex: 1; }
+        .item-name { font-size: 1.1rem; }
+        .item-price { font-size: 1.1rem; color: #d00; font-weight: 900; margin-left: 10px; }
+
+        .stores-container { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        .store-option {
+            background: white;
+            border: 4px solid var(--neon-blue);
+            padding: 15px;
+            border-radius: 18px;
+            cursor: pointer;
+            box-shadow: 5px 5px 0px var(--neon-blue);
+            text-align: left;
+        }
+
+        .feedback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .feedback-card {
+            background: white;
+            padding: 30px;
+            border-radius: 30px;
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            border: 6px solid var(--neon-purple);
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        #feedback-text {
+            color: #000;
+            font-size: 1.2rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .score-gain {
+            color: var(--neon-purple);
+            font-size: 1rem;
+            margin-top: 10px;
+            display: block;
+        }
+
+        #btn-close-feedback {
+            background: var(--neon-yellow);
+            color: black;
+            padding: 15px 30px;
+            border-radius: 15px;
+            border: 4px solid black;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px black;
+        }
+
+        #btn-close-feedback:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px black;
+        }
+
+        @media (min-width: 768px) {
+            #game-container { height: 85vh; max-height: 850px; }
+            h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <button class="close-btn" onclick="closeGame()">✖</button>
+    <header>
+        <div class="stat-box">⭐ PONTOS: <span id="score">0</span> / 2500</div>
+        <div class="stat-box">⏰ TEMPO: <span id="timer">00:00</span></div>
+        <div class="stat-box" id="lvl-badge">PERGUNTA 1/10</div>
+        <div class="stat-box">💰 R$ <span id="balance">0</span></div>
+    </header>
+
+    <div id="screen-start" class="screen active" style="justify-content: center;">
+        <div style="font-size: 5rem;">🎈</div>
+        <h1>SUPER FESTA!</h1>
+        <p>Você é um organizador de festas! Cada real que você economizar vai se tornar um ponto extra!</p>
+        <p style="font-size: 0.9rem; color: #666;">Dica: Ganhe pontos por boas escolhas e pelo que sobrar no bolso!</p>
+        <button class="btn" onclick="startGame()">INICIAR</button>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <h1 id="game-title">🛒 O MERCADO</h1>
+        <div id="budget-msg" class="budget-info"></div>
+        <p id="game-desc"></p>
+        
+        <div id="game-content-area" style="width: 100%;"></div>
+        <button id="btn-action" class="btn btn-confirm" style="margin-top: 20px; display: none;">CONFIRMAR ✅</button>
+    </div>
+
+    <div id="screen-end" class="screen" style="justify-content: center;">
+        <div id="end-emoji" style="font-size: 6rem;">🏆</div>
+        <h1 id="end-main-title">PARABÉNS!</h1>
+        <div class="stat-box" style="font-size: 1.8rem; width: 100%; margin: 15px 0; background: var(--neon-purple); color: white; border: none;">
+            PONTUAÇÃO: <span id="final-score">0</span> / 2500
+        </div>
+        <p id="end-message"></p>
+        <button class="btn" onclick="location.reload()">JOGAR DE NOVO 🔄</button>
+    </div>
+</div>
+
+<!-- Feedback Overlay -->
+<div id="feedback-overlay" class="feedback-overlay">
+    <div id="feedback-card" class="feedback-card">
+        <div id="feedback-text"></div>
+        <div id="points-feedback" class="score-gain"></div>
+        <button id="btn-close-feedback" onclick="hideFeedback()">OK, ENTENDI!</button>
+    </div>
+</div>
+
+<script>
+    // Itens do mercado inicial
+    const ITEMS_L1 = [
+        { id: 1, name: 'Bolo', price: 100, emoji: '🎂', type: 'food' },
+        { id: 2, name: 'Sucos Naturais', price: 50, emoji: '🧃', type: 'drink' },
+        { id: 3, name: 'Balões', price: 15, emoji: '🎈', type: 'misc' },
+        { id: 4, name: 'Docinhos', price: 40, emoji: '🍬', type: 'food' },
+        { id: 5, name: 'Hot Dog / Salgados', price: 45, emoji: '🌭', type: 'food' },
+        { id: 6, name: 'Decoração', price: 30, emoji: '✨', type: 'misc' },
+        { id: 7, name: 'Som e Música', price: 15, emoji: '🎵', type: 'misc' },
+        { id: 8, name: 'Refrigerantes', price: 35, emoji: '🥤', type: 'drink' }
+    ];
+
+    // Itens da festa grande
+    const ITEMS_L6 = [
+        { id: 10, name: 'Super Churrasco', price: 200, emoji: '🍖', type: 'food' },
+        { id: 11, name: 'Sucos Naturais', price: 80, emoji: '🍋', type: 'drink' },
+        { id: 12, name: 'Brinquedo', price: 150, emoji: '🏰', type: 'misc' },
+        { id: 13, name: 'Combo Hot Dog', price: 120, emoji: '🌭', type: 'food' },
+        { id: 14, name: 'Doces Premium', price: 100, emoji: '🍫', type: 'food' },
+        { id: 15, name: 'Refrigerantes', price: 50, emoji: '🥤', type: 'drink' }
+    ];
+
+    // Array de cenários do jogo (10 perguntas)
+    const SCENARIOS = [
+        { type: 'market', title: '🛒 MERCADO BÁSICO', desc: 'Escolha quantos itens achar necessários para a festa. Não esqueça do básico: comida e bebida!', budget: 250, items: ITEMS_L1, count: 0 },
+        { type: 'choice', title: '🔍 DOCINHOS', q: 'Precisamos de pelo menos 50 brigadeiros. Qual a melhor compra?', budget: 100, options: [
+            { text: "🍬 Promoção: 100 unidades por R$ 80", cost: 80, points: 200, correct: true, feedback: "Excelente escolha! Aproveitar promoções de grandes quantidades economiza muito no valor por unidade (cada doce saiu por R$ 0,80). Mas lembre-se: avalie sempre se não haverá desperdício!" },
+            { text: "🍬 Pacote Justo: 50 unidades por R$ 60", cost: 60, points: 80, correct: false, feedback: "Você comprou a quantidade exata, mas pagou R$ 1,20 por doce. Na promoção, você levaria o dobro por apenas R$ 20 a mais. Fique atento ao preço unitário!" }
+        ]},
+        { type: 'choice', title: '🥤 BEBIDAS', q: '10 litros de bebida para os convidados. O que levar?', budget: 70, options: [
+            { text: "🥤 5 Garrafas de Refrigerante (2L) por R$ 35", cost: 35, points: 100, correct: true, feedback: "Financeiramente, os refrigerantes ajudaram você a economizar R$ 35 do orçamento! Mas fique de olho: o suco natural, embora mais caro, seria uma opção muito mais saudável." },
+            { text: "🧃 10 Litros de Suco Natural por R$ 65", cost: 65, points: 180, correct: true, feedback: "Ótima escolha para a saúde dos convidados! Gastar um pouco mais em opções naturais valoriza sua festa e o bem-estar de todos." }
+        ]},
+        { type: 'choice', title: '✉️ CONVITES', q: 'Como avisar a galera que a festa vai começar?', budget: 50, options: [
+            { text: "📱 Digital pelo WhatsApp (Grátis)", cost: 0, points: 200, correct: true, feedback: "Perfeito! Você economizou R$ 50 integralmente. Hoje em dia, convites digitais são rápidos, ecológicos e não custam nada!" },
+            { text: "✉️ Convite Impresso (R$ 50)", cost: 50, points: 50, correct: false, feedback: "Você gastou todo o orçamento deste desafio. O convite digital teria deixado esses R$ 50 livres para comida!" }
+        ]},
+        { type: 'choice', title: '⚖️ O BOLO', q: 'O bolo de 2kg custa R$ 100. O de 4kg custa R$ 160. Qual levar?', budget: 180, options: [
+            { text: "🎂 Levar o de 4kg (Promoção)", cost: 160, points: 200, correct: true, feedback: "Boa ideia! Você economizou R$ 40 em comparação a levar dois bolos menores de 2kg. Grande valor por quilo!" },
+            { text: "🎂 Levar o de 2kg (Mais simples)", cost: 100, points: 100, correct: false, feedback: "Você gastou menos agora, mas o preço por quilo está mais caro. Em festas, o tamanho maior costuma compensar financeiramente." }
+        ]},
+        { type: 'market', title: '🏰 FESTA GRANDE', desc: 'Orçamento maior! Escolha quantos itens premium quiser. Comida e bebida são obrigatórios!', budget: 450, items: ITEMS_L6, count: 0 },
+        { type: 'choice', title: '✨ DECORAÇÃO', q: 'A mesa principal está muito vazia!', budget: 130, options: [
+            { text: "✂️ Criar enfeites com papel (R$ 20)", cost: 20, points: 200, correct: true, feedback: "Incrível! Você economizou R$ 110! Usar as mãos e a criatividade é o segredo para uma festa linda e barata." },
+            { text: "🛍️ Comprar Kit Pronto (R$ 120)", cost: 120, points: 70, correct: false, feedback: "Ficou bonito, mas quase acabou com o dinheiro. Muitas vezes, pequenos trabalhos manuais poupam muito dinheiro." }
+        ]},
+        { type: 'choice', title: '🛒 REPOSIÇÃO', q: 'Os salgados acabaram! Como repor?', budget: 80, options: [
+            { text: "🛒 Congelados no mercado (R$ 35)", cost: 35, points: 150, correct: true, feedback: "Boa saída! Você economizou R$ 45 comparado ao delivery. Ter um 'plano B' no mercado ajuda a não gastar demais na urgência." },
+            { text: "🛵 Delivery Urgente (R$ 75)", cost: 75, points: 60, correct: false, feedback: "Urgências e taxas de entrega custam caro. O planejamento evita que você pague o dobro pelo mesmo produto." }
+        ]},
+        { type: 'choice', title: '🎵 MÚSICA', q: 'O que teremos de som para animar?', budget: 160, options: [
+            { text: "📻 Caixa da casa + Playlist (Grátis)", cost: 0, points: 200, correct: true, feedback: "Excelente! Economizou R$ 160! Com a tecnologia de hoje, uma boa seleção de músicas já garante o sucesso da festa sem custo." },
+            { text: "🎧 DJ Iniciante (R$ 150)", cost: 150, points: 80, correct: false, feedback: "O DJ é legal, mas consumiu quase todo o seu orçamento extra. Avalie se o investimento vale a pena para o tamanho da festa." }
+        ]},
+        { type: 'choice', title: '🧊 GELO', q: 'As bebidas estão esquentando! Precisamos de gelo.', budget: 50, options: [
+            { text: "🛒 Supermercado (Saco 5kg por R$ 15)", cost: 15, points: 200, correct: true, feedback: "Ótima escolha! No mercado você compra sacos grandes por um preço justo. O gelo do posto é caro e o de casa nunca é suficiente para uma festa inteira!" },
+            { text: "⛽ Posto de Gasolina (Saco 2kg por R$ 30)", cost: 30, points: 60, correct: false, feedback: "Cuidado! No posto você paga o dobro do preço por menos da metade do gelo. Planeje-se para comprar no mercado antes!" }
+        ]}
+    ];
+
+    let state = { score: 0, seconds: 0, balance: 0, currentStep: 0, selectedItems: [], timer: null, feedbackActive: false, canInteract: true };
+
+    function startGame() {
+        state.timer = setInterval(() => {
+            state.seconds++;
+            let m = Math.floor(state.seconds / 60).toString().padStart(2, '0');
+            let s = (state.seconds % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
+        }, 1000);
+        loadScenario();
+        showScreen('screen-game');
+    }
+
+    function loadScenario() {
+        if (state.currentStep >= SCENARIOS.length) return endGame();
+
+        state.canInteract = false;
+        setTimeout(() => { state.canInteract = true; }, 500);
+
+        const scenario = SCENARIOS[state.currentStep];
+        state.balance = scenario.budget;
+        
+        document.getElementById('lvl-badge').innerText = `PERGUNTA ${state.currentStep + 1}/10`;
+        document.getElementById('game-title').innerText = scenario.title;
+        document.getElementById('budget-msg').innerText = `💰 Você tem R$ ${scenario.budget} para este desafio!`;
+        
+        const area = document.getElementById('game-content-area');
+        const actionBtn = document.getElementById('btn-action');
+        area.innerHTML = '';
+        actionBtn.style.display = 'none';
+        updateUI();
+
+        if (scenario.type === 'market') {
+            document.getElementById('game-desc').innerText = scenario.desc;
+            state.selectedItems = [];
+            const grid = document.createElement('div');
+            grid.className = 'items-grid';
+            scenario.items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.onclick = () => {
+                    if (!state.canInteract) return;
+                    const idx = state.selectedItems.indexOf(item);
+                    if (idx > -1) {
+                        state.selectedItems.splice(idx, 1);
+                        card.classList.remove('selected');
+                    } else {
+                        if (scenario.count === 0 || state.selectedItems.length < scenario.count) {
+                            state.selectedItems.push(item);
+                            card.classList.add('selected');
+                        }
+                    }
+                };
+                card.innerHTML = `<div class="item-emoji">${item.emoji}</div><div class="item-info"><span class="item-name">${item.name}</span> <span class="item-price">R$ ${item.price},00</span></div>`;
+                grid.appendChild(card);
+            });
+            area.appendChild(grid);
+            actionBtn.style.display = 'block';
+            actionBtn.onclick = () => {
+                if (!state.canInteract) return;
+                checkMarket(scenario);
+            };
+        } else {
+            document.getElementById('game-desc').innerText = scenario.q;
+            const container = document.createElement('div');
+            container.className = 'stores-container';
+            scenario.options.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'store-option';
+                div.innerHTML = `<h3>${opt.text}</h3><p style="margin-top:5px; color:#d00">Custo: R$ ${opt.cost}</p>`;
+                div.onclick = () => {
+                    if (!state.canInteract) return;
+                    const saved = scenario.budget - opt.cost;
+                    const pointsFromChoice = opt.points;
+                    const bonusFromEconomy = Math.max(0, saved);
+                    
+                    state.score += (pointsFromChoice + bonusFromEconomy);
+                    state.balance = saved;
+                    updateUI();
+                    
+                    showFeedback(
+                        `${opt.feedback} (Neste desafio você economizou R$ ${saved})`, 
+                        opt.correct || opt.points > 100,
+                        `+${pointsFromChoice} pts (escolha) / +${bonusFromEconomy} pts (economia!)`
+                    );
+                };
+                container.appendChild(div);
+            });
+            area.appendChild(container);
+        }
+    }
+
+    function checkMarket(scenario) {
+        if (scenario.count === 0) {
+            if (state.selectedItems.length === 0) return showFeedback("POR FAVOR, ESCOLHA PELO MENOS 1 ITEM!", false);
+        } else if (state.selectedItems.length < scenario.count) {
+            return showFeedback(`POR FAVOR, ESCOLHA OS ${scenario.count} ITENS!`, false);
+        }
+        
+        const spent = state.selectedItems.reduce((acc, i) => acc + i.price, 0);
+        const saved = scenario.budget - spent;
+        const hasFood = state.selectedItems.some(i => i.type === 'food');
+        const hasDrink = state.selectedItems.some(i => i.type === 'drink');
+
+        let msg = `Você gastou um total de R$ ${spent}. `;
+        let isPositive = true;
+        let pointsFromChoice = 0;
+        let bonusFromEconomy = Math.max(0, saved);
+
+        if (spent > scenario.budget) {
+            msg += `Poxa! Você estourou o orçamento em R$ ${Math.abs(saved)}. Tente ser mais econômico na próxima!`;
+            isPositive = false;
+            pointsFromChoice = 50; 
+            bonusFromEconomy = 0;
+        } else {
+            msg += `Parabéns! Você economizou R$ ${saved}. `;
+            if (!hasFood || !hasDrink) {
+                msg += "Cuidado: você esqueceu do básico (comida ou bebida)! Combine com os convidados.";
+                pointsFromChoice = 100;
+            } else {
+                msg += "Sua festa está completa com comida e bebida!";
+                pointsFromChoice = 200;
+            }
+        }
+        
+        state.score += (pointsFromChoice + bonusFromEconomy);
+        state.balance = saved;
+        updateUI();
+        
+        showFeedback(
+            msg, 
+            isPositive, 
+            `+${pointsFromChoice} pts (festa) / +${bonusFromEconomy} pts (economia!)`
+        );
+    }
+
+    function showFeedback(text, positive, pointsInfo = "") {
+        state.feedbackActive = true;
+        const overlay = document.getElementById('feedback-overlay');
+        const card = document.getElementById('feedback-card');
+        document.getElementById('feedback-text').innerText = text;
+        document.getElementById('points-feedback').innerText = pointsInfo;
+        card.style.borderColor = positive ? 'var(--success-vibrant)' : 'var(--danger-vibrant)';
+        overlay.style.display = 'flex';
+    }
+
+    function hideFeedback() {
+        document.getElementById('feedback-overlay').style.display = 'none';
+        if (state.feedbackActive) {
+            state.feedbackActive = false;
+            state.currentStep++;
+            loadScenario();
+        }
+    }
+
+    function endGame() {
+        clearInterval(state.timer);
+        const final = state.score;
+        document.getElementById('final-score').innerText = final;
+        
+        const titleEl = document.getElementById('end-main-title');
+        let rank = "";
+        let color = "";
+        let emoji = "🏆";
+
+        if (final >= 2200) {
+            titleEl.innerText = "PARABÉNS!";
+            rank = "MESTRE ORGANIZADOR! 👑 Sua economia foi incrível! Você é um gênio das finanças!";
+            color = "var(--success-vibrant)";
+            emoji = "👑";
+        } else if (final >= 1600) {
+            titleEl.innerText = "PARABÉNS!";
+            rank = "ORGANIZADOR PROFISSIONAL! 👍 Suas economias ajudaram muito na pontuação final!";
+            color = "var(--neon-blue)";
+            emoji = "👍";
+        } else {
+            // Título diferente para pontuações baixas (muito gasto ou poucas escolhas certas)
+            titleEl.innerText = "VOCÊ PODE MELHORAR!";
+            rank = "APRENDIZ DE FESTAS! 🎈 Tente gastar menos e escolher opções com melhor custo-benefício na próxima vez.";
+            color = "var(--danger-vibrant)";
+            emoji = "🎈";
+        }
+        
+        document.getElementById('end-emoji').innerText = emoji;
+        document.getElementById('end-message').innerText = rank;
+        document.getElementById('end-message').style.color = color;
+        showScreen('screen-end');
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function updateUI() {
+        document.getElementById('score').innerText = state.score;
+        document.getElementById('balance').innerText = state.balance;
+    }
+
+    function closeGame() {
+        if (confirm("Quer sair e recomeçar a organização?")) location.reload();
+    }
+</script>
+
+</body>
+</html>

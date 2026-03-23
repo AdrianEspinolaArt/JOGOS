@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Supermercado das Escolhas</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+        :root {
+            --primary: #a84191;
+            --primary-dark: #8a3578;
+            --secondary: #61c6ee;
+            --danger-color: #FF3131;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Fredoka One', cursive;
+            background: linear-gradient(135deg, #7dd3f0 0%, #61c6ee 100%);
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        /* BOTÃO FECHAR FIXO */
+        .btn-x-fixo {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            background: var(--danger-color);
+            color: white;
+            border: 2px solid white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: none;
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* BARRA SUPERIOR */
+        header {
+            background: rgba(255,255,255,0.25);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-bottom: 4px solid var(--primary);
+            min-height: 100px;
+            gap: 5px;
+        }
+
+        .info-topo {
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+            padding-left: 10px;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nivel-badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            border: 2px solid white;
+        }
+
+        .cronometro {
+            font-size: 1rem;
+            color: var(--primary);
+            background: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .lista-palavras {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+            padding: 5px;
+            max-width: 82%; 
+        }
+
+        .palavra-item {
+            background: white;
+            color: #333;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            border: 2px solid var(--secondary);
+            text-transform: uppercase;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .palavra-item strong {
+            font-weight: 900;
+        }
+
+        .palavra-item.concluido {
+            background: #444;
+            color: #888;
+            opacity: 0.3;
+            text-decoration: line-through;
+            border-color: transparent;
+        }
+
+        /* PRATELEIRA */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            padding: 15px;
+            align-items: stretch;
+        }
+
+        .item-card {
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem; 
+            border: 5px solid var(--secondary);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .item-card:active {
+            transform: scale(0.9);
+        }
+
+        /* RODAPÉ */
+        footer {
+            height: 120px;
+            background: rgba(255,255,255,0.3);
+            border-top: 4px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            flex-shrink: 0;
+        }
+
+        .area-carrinho {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            height: 60px;
+            overflow: hidden; 
+        }
+
+        .produto-carrinho {
+            font-size: 2.2rem;
+            animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .cesta-icon { font-size: 2.5rem; margin-top: -5px; }
+
+        /* OVERLAYS */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #7dd3f0 0%, #61c6ee 100%);
+            z-index: 6000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .oculto { display: none !important; }
+
+        .btn-acao {
+            background: var(--primary);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.5rem;
+            border: 3px solid white;
+            box-shadow: 0 4px var(--primary-dark);
+            cursor: pointer;
+            margin-top: 20px;
+            font-family: 'Fredoka One', cursive;
+            text-transform: uppercase;
+        }
+
+        .btn-acao:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px var(--primary-dark);
+        }
+
+        .feedback-pop {
+            position: absolute;
+            font-size: 3.5rem;
+            pointer-events: none;
+            animation: popUp 0.6s ease-out forwards;
+            z-index: 7000;
+        }
+
+        @keyframes popUp {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(1) translateY(-100px); opacity: 0; }
+        }
+
+        @media (orientation: portrait) {
+            main { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(5, 1fr); }
+            .item-card { font-size: 3.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="btn-x-fixo" onclick="location.reload()">X</button>
+
+    <!-- Tela Inicial -->
+    <div id="tela-inicio" class="overlay">
+        <h1 style="font-size: clamp(1.8rem, 10vw, 2.5rem); color: var(--primary); text-shadow: 2px 2px 0 white; margin-bottom: 15px; line-height: 1.1; width: 95%;">COMPRAS NO SUPERMERCADO</h1>
+        <div style="background: white; border: 5px solid var(--secondary); border-radius: 20px; padding: 15px; max-width: 90%; margin-bottom: 15px;">
+            <p style="font-size: clamp(1rem, 4vw, 1.3rem); text-transform: uppercase; line-height: 1.3; color: #333;">LEIA A PALAVRA DA LISTA E CLIQUE NO PRODUTO</p>
+        </div>
+        
+        <div style="display: flex; gap: 15px; font-size: 6rem; margin: 30px 0; align-items: center;">
+            <span>🛒</span>
+            <span>📄</span>
+            <span style="font-size: 0.5em; opacity: 0.9;">✏️</span>
+        </div>
+        
+        <button class="btn-acao" onclick="iniciarJogo()">INICIAR</button>
+    </div>
+
+    <!-- Tela Final -->
+    <div id="tela-vitoria" class="overlay oculto">
+        <h1 style="font-size: 2.5rem; color: var(--primary); text-shadow: 2px 2px 0 white;">PARABÉNS!</h1>
+        <div style="background: white; border: 5px solid var(--secondary); border-radius: 20px; padding: 15px; max-width: 90%; margin: 10px 0;">
+            <h2 style="font-size: 1.3rem; color: #333; margin-bottom: 8px;">VOCÊ COMPROU TUDO DAS LISTAS!</h2>
+            <div id="msg-tempo" style="font-size: 1.3rem; color: var(--primary); margin: 10px 0;"></div>
+            <p style="font-size: 1rem; color: #555;">QUE TAL TENTAR COMPRAR MAIS RÁPIDO AGORA?</p>
+        </div>
+        <div style="font-size: 5rem; margin: 15px;">🏆✨</div>
+        <button class="btn-acao" onclick="location.reload()">JOGAR DE NOVO</button>
+    </div>
+
+    <!-- Interface -->
+    <header>
+        <div class="info-topo">
+            <div class="nivel-badge" id="label-nivel">ETAPA 1</div>
+            <div class="cronometro" id="timer-display">00s</div>
+        </div>
+        <div class="lista-palavras" id="lista-palavras"></div>
+    </header>
+
+    <main id="prateleira"></main>
+
+    <footer>
+        <div class="area-carrinho" id="carrinho-conteudo"></div>
+        <div class="cesta-icon">🛒</div>
+    </footer>
+
+    <script>
+        const TODOS_ITENS = [
+            { txt: 'MAÇÃ', img: '🍎', id: 'maca' },
+            { txt: 'PÃO', img: '🍞', id: 'pao' },
+            { txt: 'LEITE', img: '🥛', id: 'leite' },
+            { txt: 'BANANA', img: '🍌', id: 'banana' },
+            { txt: 'QUEIJO', img: '🧀', id: 'queijo' },
+            { txt: 'BRÓCOLIS', img: '🥦', id: 'brocolis' },
+            { txt: 'OVO', img: '🥚', id: 'ovo' },
+            { txt: 'UVA', img: '🍇', id: 'uva' },
+            { txt: 'SABONETE', img: '🧼', id: 'sabonete' },
+            { txt: 'SUCO', img: '🧃', id: 'suco' },
+            { txt: 'BOLO', img: '🍰', id: 'bolo' },
+            { txt: 'MEL', img: '🍯', id: 'mel' },
+            { txt: 'CAFÉ', img: '☕', id: 'cafe' },
+            { txt: 'PERA', img: '🍐', id: 'pera' },
+            { txt: 'FRANGO', img: '🍗', id: 'frango' },
+            { txt: 'MACARRÃO', img: '🍝', id: 'macarrao' },
+            { txt: 'LARANJA', img: '🍊', id: 'laranja' },
+            { txt: 'MANTEIGA', img: '🧈', id: 'manteiga' },
+            { txt: 'PEIXE', img: '🐟', id: 'peixe' },
+            { txt: 'BATATA', img: '🥔', id: 'batata' },
+            { txt: 'MELANCIA', img: '🍉', id: 'melancia' },
+            { txt: 'CARNE', img: '🥩', id: 'carne' }
+        ];
+
+        const DISTRACOES = ['🥓', '🥐', '🧅', '🧻', '🧽', '🍪', '🥥', '🌽', '🥫', '🍫', '🥤', '🍩', '🥯'];
+
+        const ETAPAS = [
+            { qtd: 2, layout: 'vertical' },
+            { qtd: 3, layout: 'vertical' },
+            { qtd: 4, layout: 'horizontal' },
+            { qtd: 5, layout: 'horizontal' },
+            { qtd: 6, layout: 'horizontal' } // Etapa 5 agora sem ilustrações na lista
+        ];
+
+        let etapaAtual = 0;
+        let encontradosEtapa = 0;
+        let tempo = 0;
+        let timer;
+        let itensDaListaAtual = [];
+
+        function iniciarJogo() {
+            document.getElementById('tela-inicio').classList.add('oculto');
+            document.getElementById('tela-vitoria').classList.add('oculto');
+            document.getElementById('carrinho-conteudo').innerHTML = '';
+            
+            tempo = 0;
+            if (timer) clearInterval(timer);
+            timer = setInterval(() => {
+                tempo++;
+                document.getElementById('timer-display').innerText = tempo + 's';
+            }, 1000);
+            carregarEtapa(0);
+        }
+
+        function carregarEtapa(n) {
+            etapaAtual = n;
+            encontradosEtapa = 0;
+            document.getElementById('label-nivel').innerText = `ETAPA ${n + 1}`;
+            
+            const config = ETAPAS[n];
+            
+            itensDaListaAtual = [...TODOS_ITENS]
+                .sort(() => Math.random() - 0.5)
+                .slice(0, config.qtd);
+            
+            renderLista(itensDaListaAtual, config.layout);
+            
+            const totalSlots = 10;
+            let pool = [...itensDaListaAtual];
+            let extras = [...DISTRACOES, ...TODOS_ITENS.filter(i => !itensDaListaAtual.find(a => a.id === i.id))];
+            extras = extras.sort(() => Math.random() - 0.5);
+
+            while(pool.length < totalSlots) {
+                let d = extras.pop();
+                let emoji = d.img || d;
+                if(!pool.find(p => p.img === emoji)) {
+                    pool.push({ img: emoji, id: 'extra-' + Math.random(), txt: '' });
+                }
+            }
+            
+            renderPrateleira(pool.sort(() => Math.random() - 0.5));
+        }
+
+        function renderLista(itens, layout) {
+            const container = document.getElementById('lista-palavras');
+            container.innerHTML = '';
+            container.className = 'lista-palavras';
+            
+            itens.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'palavra-item';
+                div.id = `list-${item.id}`;
+                
+                let html = '';
+                if(layout === 'horizontal-com-foto') {
+                    html = `<span>${item.img}</span> `;
+                }
+                html += `<strong>${item.txt}</strong>`;
+                
+                div.innerHTML = html;
+                container.appendChild(div);
+            });
+        }
+
+        function renderPrateleira(itens) {
+            const container = document.getElementById('prateleira');
+            container.innerHTML = '';
+            
+            itens.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-card';
+                div.innerHTML = item.img;
+                div.onclick = (e) => clicar(item, e);
+                container.appendChild(div);
+            });
+        }
+
+        function clicar(item, e) {
+            const ehAlvo = itensDaListaAtual.find(i => i.txt === item.txt);
+            const elementoLista = ehAlvo ? document.getElementById(`list-${ehAlvo.id}`) : null;
+
+            const pop = document.createElement('div');
+            pop.className = 'feedback-pop';
+            pop.style.left = (e.clientX - 25) + 'px';
+            pop.style.top = (e.clientY - 25) + 'px';
+
+            if (ehAlvo && !elementoLista.classList.contains('concluido')) {
+                pop.innerHTML = '🌟';
+                elementoLista.classList.add('concluido');
+                encontradosEtapa++;
+                irParaCarrinho(item.img);
+
+                if (encontradosEtapa === itensDaListaAtual.length) {
+                    setTimeout(proximaOuFim, 500);
+                }
+            } else {
+                pop.innerHTML = '❌';
+            }
+
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 600);
+        }
+
+        function irParaCarrinho(emoji) {
+            const container = document.getElementById('carrinho-conteudo');
+            const span = document.createElement('span');
+            span.className = 'produto-carrinho';
+            span.innerHTML = emoji;
+            container.appendChild(span);
+        }
+
+        function proximaOuFim() {
+            if (etapaAtual + 1 < ETAPAS.length) {
+                carregarEtapa(etapaAtual + 1);
+            } else {
+                finalizar();
+            }
+        }
+
+        function finalizar() {
+            clearInterval(timer);
+            document.getElementById('tela-vitoria').classList.remove('oculto');
+            document.getElementById('msg-tempo').innerText = `SEU TEMPO: ${tempo} SEGUNDOS`;
+        }
+
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>

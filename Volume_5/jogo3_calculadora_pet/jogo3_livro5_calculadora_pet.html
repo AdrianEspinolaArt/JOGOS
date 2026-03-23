@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CALCULADORA PET - Desafio Financeiro</title>
+    <!-- Fontes: Fredoka One para títulos e Nunito para leitura técnica e clara -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --success: #00b894;
+            --warning: #feca57;
+            --danger: #ff6b6b;
+            --bg: #fff1b0; 
+            --cor-laranja: #ff9f43;
+            --cor-rosa: #ff9ff3;
+            --cor-verde: #10ac84;
+            --cor-azul: #54a0ff;
+            --container-bg: #fffdf0; 
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #2d3436;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Nunito', sans-serif;
+            padding: 10px; 
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--container-bg);
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border-radius: 35px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom-left-radius: 35px;
+            border-bottom-right-radius: 35px;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 20c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm3-5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm3 5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-8 5c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4z' fill='%23feca57' fill-opacity='0.4'/%3E%3C/svg%3E");
+        }
+
+        header h1 {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(24px, 6vw, 34px);
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-weight: 700;
+            font-size: clamp(14px, 4vw, 18px);
+            opacity: 0.95;
+        }
+
+        .screen {
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+            animation: bounceIn 0.5s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        h2 {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(20px, 5vw, 26px);
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 15px;
+            color: #777;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .pet-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding-bottom: 10px;
+        }
+
+        .pet-card {
+            border-radius: 25px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: clamp(160px, 25vh, 220px);
+            border: 4px solid rgba(255,255,255,0.3);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .card-cao { background-color: var(--cor-laranja); }
+        .card-gato { background-color: var(--cor-rosa); }
+        .card-coelho { background-color: var(--cor-verde); }
+        .card-passaro { background-color: var(--cor-azul); }
+
+        .pet-card:active { transform: scale(0.95); }
+
+        .pet-icon { 
+            font-size: clamp(40px, 10vw, 70px);
+            margin-bottom: 10px;
+            filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1));
+        }
+        
+        .pet-name { 
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(16px, 4vw, 20px); 
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .story-box {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 20px;
+            border: 2px dashed var(--primary);
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-size: clamp(16px, 4.5vw, 19px);
+            font-weight: 600;
+        }
+
+        .tip-box {
+            background: #fff9db;
+            padding: 12px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .budget-tag {
+            background: var(--success);
+            color: white;
+            padding: 12px;
+            border-radius: 50px;
+            text-align: center;
+            font-weight: 800;
+            margin-bottom: 15px;
+            font-size: clamp(18px, 5vw, 22px);
+            box-shadow: 0 4px 10px rgba(0, 184, 148, 0.3);
+        }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--primary);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 15px;
+            border: 2px solid #eee;
+            font-size: 15px;
+            font-weight: 700;
+            background: white;
+            font-family: 'Nunito', sans-serif;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 20px;
+            font-size: clamp(18px, 5vw, 22px);
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            margin-top: 5px;
+            text-align: center;
+            font-family: 'Fredoka One', cursive;
+            touch-action: manipulation;
+        }
+
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 6px 0px #4834d4; margin-bottom: 10px; }
+        .btn-primary:active { transform: translateY(3px); box-shadow: 0 3px 0px #4834d4; }
+        .btn-outline { border: 3px solid var(--primary); color: var(--primary); background: transparent; }
+
+        .result-card {
+            padding: 20px;
+            border-radius: 30px;
+            text-align: center;
+            margin-bottom: 15px;
+            border: 4px solid white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            background: white;
+        }
+
+        .score-box { font-family: 'Fredoka One', cursive; font-size: clamp(35px, 10vw, 50px); margin: 10px 0; }
+        .feedback-text { font-size: clamp(16px, 4.2vw, 18px); line-height: 1.4; font-weight: 600; text-align: left; }
+
+        @media (max-height: 600px) {
+            .app-container { min-height: 100vh; border-radius: 0; }
+            .pet-card { height: 140px; }
+            header { padding: 15px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>CALCULADORA PET</h1>
+            <p>Aprenda a cuidar e economizar!</p>
+        </header>
+
+        <div id="screenSelection" class="screen active">
+            <h2>De quem vamos cuidar hoje?</h2>
+            <p class="instruction">Escolha um dos animais abaixo:</p>
+            <div class="pet-grid">
+                <div class="pet-card card-cao" onclick="startStory('cao')">
+                    <span class="pet-icon icon-cao">🐕</span>
+                    <span class="pet-name">Bartolomeu</span>
+                </div>
+                <div class="pet-card card-gato" onclick="startStory('gato')">
+                    <span class="pet-icon icon-gato">🐈</span>
+                    <span class="pet-name">Ágata</span>
+                </div>
+                <div class="pet-card card-coelho" onclick="startStory('coelho')">
+                    <span class="pet-icon icon-coelho">🐇</span>
+                    <span class="pet-name">Algodão</span>
+                </div>
+                <div class="pet-card card-passaro" onclick="startStory('passaro')">
+                    <span class="pet-icon icon-passaro">🦜</span>
+                    <span class="pet-name">Nico</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="screenIntro" class="screen">
+            <h2 id="introTitle">Olá!</h2>
+            <div class="story-box" id="storyContent"></div>
+            <div class="tip-box">
+                <div id="tipIcon">💡</div>
+                <p id="tipContent"></p>
+            </div>
+            <div class="budget-tag" id="budgetValue">Orçamento: R$ 0,00</div>
+            <button type="button" class="btn btn-primary" onclick="showScreen('screenCalc')">Ir para as compras</button>
+            <button type="button" class="btn btn-outline" onclick="showScreen('screenSelection')">Voltar</button>
+        </div>
+
+        <div id="screenCalc" class="screen">
+            <h2>Lista de Compras</h2>
+            <p class="instruction">Faça escolhas inteligentes!</p>
+            <div class="input-group">
+                <label>🍴 Alimentação</label>
+                <select id="selRacao" onchange="updateLiveTotal()"></select>
+            </div>
+            <div class="input-group">
+                <label>🧼 Higiene e Banho</label>
+                <select id="selBanho" onchange="updateLiveTotal()"></select>
+            </div>
+            <div class="input-group">
+                <label>🩺 Saúde</label>
+                <select id="selVet" onchange="updateLiveTotal()"></select>
+            </div>
+            <div class="input-group">
+                <label id="labelImprevisto">🎁 Necessidade Especial</label>
+                <select id="selExtra" onchange="updateLiveTotal()"></select>
+            </div>
+            <div id="liveTotal" style="font-weight: 800; text-align: right; padding: 10px; font-size: 18px;">
+                Total: R$ 0,00
+            </div>
+            <button type="button" class="btn btn-primary" onclick="processResult()">Finalizar Mês</button>
+            <button type="button" class="btn btn-outline" onclick="showScreen('screenIntro')">Voltar</button>
+        </div>
+
+        <div id="screenResult" class="screen">
+            <h2>Resumo do Mês</h2>
+            <div id="resultCard" class="result-card">
+                <p id="resultStatus" style="font-size: 20px; font-weight: 800;"></p>
+                <div id="saldoLabel" style="font-weight: 700; color: #777; margin-top: 10px;">Saldo na carteira:</div>
+                <div id="resultTotal" class="score-box">R$ 0,00</div>
+                <div id="feedbackText" class="feedback-text"></div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="showScreen('screenSelection')">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        function formatBold(text) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        }
+
+        const pets = {
+            cao: {
+                name: "Bartolomeu",
+                article: "do",
+                budget: 350.00,
+                intro: "O Bartolomeu é um cão enorme! Ele **precisa de uma cama nova** para dormir bem e crescer saudável.",
+                tip: "Dica: Cães grandes precisam de mais espaço e comida!",
+                options: {
+                    racao: [
+                        { t: "Pacote de 7kg (dura 15 dias)", v: 80, short: true },
+                        { t: "Pacote de 15kg (dura o mês todo)", v: 150, short: false }
+                    ],
+                    banho: [ { t: "Petshop (com tosa)", v: 110 }, { t: "Banho em casa", v: 20 } ],
+                    vet: [ { t: "Vacinas e vermífugos", v: 150 }, { t: "Nenhum este mês", v: 0 } ],
+                    extra: [ { t: "Cama extra grande de luxo", v: 160 }, { t: "Cama grande", v: 80 } ]
+                }
+            },
+            gato: {
+                name: "Ágata",
+                article: "da",
+                budget: 300,
+                intro: "A Ágata é uma gata muito esperta! Ela **precisa de um arranhador novo** para não arranhar os móveis da casa.",
+                tip: "Dica: Gatos amam lugares altos e arranhadores!",
+                options: {
+                    racao: [ { t: "Ração Premium 3kg", v: 85 }, { t: "Ração Super Premium 3kg", v: 100 } ],
+                    banho: [ { t: "Banho a seco", v: 60 }, { t: "Banho normal", v: 90 } ],
+                    vet: [ { t: "Antipulgas e vermífugos", v: 75 }, { t: "Nenhum este mês", v: 0 } ],
+                    extra: [ { t: "Arranhador torre gigante", v: 140 }, { t: "Arranhador protetor de sofá", v: 40 } ]
+                }
+            },
+            coelho: {
+                name: "Algodão",
+                article: "do",
+                budget: 200,
+                intro: "O Algodão adora roer! Ele precisa de um **estoque novo de feno e mordedores** para manter seus dentes saudáveis.",
+                tip: "Dica: Feno é a base da alimentação dos coelhos!",
+                options: {
+                    racao: [
+                        { t: "Feno de alfafa e ração", v: 20, isHealthy: true },
+                        { t: "Ração premium - R$ 60,00", v: 60, isHealthy: false }
+                    ],
+                    banho: [ { t: "Pente de metal", v: 20 }, { t: "Luva tira pelo", v: 50 } ],
+                    vet: [ { t: "Consulta de rotina", v: 80 }, { t: "Nenhum este mês", v: 0 } ],
+                    extra: [ { t: "Túnel de cano", v: 15 }, { t: "Mordedor para coelho", v: 20 } ]
+                }
+            },
+            passaro: {
+                name: "Nico",
+                article: "do",
+                budget: 130,
+                intro: "O Nico está meio tristinho e precisa trocar de balanço. Suas penas precisam de **vitaminas** para brilharem de novo!",
+                tip: "Dica: Calopsitas precisam de estímulos e boa nutrição!",
+                options: {
+                    racao: [ { t: "Sementes comuns e frutas secas", v: 25 }, { t: "Ração completa e frutas frescas", v: 50 } ],
+                    banho: [ { t: "Banheira decorada", v: 20 }, { t: "Pote raso para banho", v: 0 } ],
+                    vet: [ { t: "Suplemento de penas (vitaminas)", v: 35 }, { t: "Vermífugos", v: 40 } ],
+                    extra: [ { t: "Balanço decorado", v: 45 }, { t: "Balanço simples", v: 10 } ]
+                }
+            }
+        };
+
+        let activePet = null;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function startStory(petKey) {
+            activePet = pets[petKey];
+            document.getElementById('introTitle').innerText = `Cuidando ${activePet.article} ${activePet.name}`;
+            document.getElementById('storyContent').innerHTML = formatBold(activePet.intro);
+            document.getElementById('tipContent').innerText = activePet.tip;
+            document.getElementById('budgetValue').innerText = `Orçamento: R$ ${activePet.budget.toFixed(2).replace('.', ',')}`;
+            setupOptions();
+            showScreen('screenIntro');
+        }
+
+        function setupOptions() {
+            fillSelect('selRacao', activePet.options.racao);
+            fillSelect('selBanho', activePet.options.banho);
+            fillSelect('selVet', activePet.options.vet);
+            fillSelect('selExtra', activePet.options.extra);
+            updateLiveTotal();
+        }
+
+        function fillSelect(id, options) {
+            const el = document.getElementById(id);
+            el.innerHTML = '<option value="0">--- Escolha ---</option>';
+            options.forEach((o, index) => {
+                const opt = document.createElement('option');
+                opt.value = o.v + "|" + index; 
+                opt.innerText = `${o.t} - R$ ${o.v.toFixed(2).replace('.', ',')}`;
+                el.appendChild(opt);
+            });
+        }
+
+        function getSelectedTotal() {
+            const r = parseFloat(document.getElementById('selRacao').value.split("|")[0]) || 0;
+            const b = parseFloat(document.getElementById('selBanho').value.split("|")[0]) || 0;
+            const v = parseFloat(document.getElementById('selVet').value.split("|")[0]) || 0;
+            const e = parseFloat(document.getElementById('selExtra').value.split("|")[0]) || 0;
+            return Number((r + b + v + e).toFixed(2));
+        }
+
+        function updateLiveTotal() {
+            const total = getSelectedTotal();
+            const color = total > activePet.budget ? 'var(--danger)' : 'var(--success)';
+            document.getElementById('liveTotal').innerHTML = `Gasto: <span style="color:${color}">R$ ${total.toFixed(2).replace('.', ',')}</span>`;
+        }
+
+        function processResult() {
+            const rRaw = document.getElementById('selRacao').value;
+            const bRaw = document.getElementById('selBanho').value;
+            const vRaw = document.getElementById('selVet').value;
+            const eRaw = document.getElementById('selExtra').value;
+
+            if (rRaw === "0" || bRaw === "0" || vRaw === "0" || eRaw === "0") {
+                alert("Escolha todos os itens da lista!");
+                return;
+            }
+
+            const totalGasto = getSelectedTotal();
+            const budget = activePet.budget;
+            const remaining = Number((budget - totalGasto).toFixed(2));
+            const selectedRacaoIndex = parseInt(rRaw.split("|")[1]);
+            const selectedVetIndex = parseInt(vRaw.split("|")[1]);
+            const selectedExtraIndex = parseInt(eRaw.split("|")[1]);
+
+            const statusEl = document.getElementById('resultStatus');
+            const totalEl = document.getElementById('resultTotal');
+            const feedbackEl = document.getElementById('feedbackText');
+            const saldoLabel = document.getElementById('saldoLabel');
+            const card = document.getElementById('resultCard');
+
+            const saldoDisplayFinal = remaining === 0 ? "não sobrou nada!" : `R$ ${remaining.toFixed(2).replace('.', ',')}`;
+
+            if (totalGasto > budget) {
+                card.style.background = '#fff5f5';
+                statusEl.innerText = "🚨 Orçamento Estourado!";
+                statusEl.style.color = 'var(--danger)';
+                saldoLabel.style.display = 'block';
+                saldoLabel.innerText = "Saldo final:";
+                totalEl.innerText = `R$ ${remaining.toFixed(2).replace('.', ',')}`;
+                feedbackEl.innerHTML = `Puxa! Você gastou <strong>R$ ${Math.abs(remaining).toFixed(2).replace('.', ',')}</strong> a mais do que o permitido. Tente economizar na próxima!`;
+            } else {
+                card.style.background = '#f0fff4';
+                let avisos = [];
+
+                if (activePet.name === "Bartolomeu" && activePet.options.racao[selectedRacaoIndex].short) {
+                    avisos.push("Bartolomeu vai ficar sem comida no meio do mês. Seria melhor ter comprado o pacote de ração de 15 kg...");
+                }
+
+                if (activePet.name === "Algodão") {
+                    if (activePet.options.racao[selectedRacaoIndex].isHealthy === false) {
+                        avisos.push("o Algodão precisa de feno todos os dias para digerir bem a comida. A ração sozinha não é a opção mais saudável.");
+                    }
+                    if (selectedExtraIndex !== 1) {
+                        avisos.push("o Algodão precisa de um mordedor. Os dentes dos coelhos nunca param de crescer e ele precisa roer para mantê-los saudáveis!");
+                    }
+                }
+
+                if (activePet.name === "Nico" && selectedVetIndex === 1) {
+                    avisos.push("o Nico precisava de vitaminas para as suas penas brilharem, e não de vermífugos...");
+                }
+
+                if (avisos.length > 0) {
+                    statusEl.innerText = "Você gastou:";
+                    statusEl.style.color = 'var(--warning)';
+                    saldoLabel.style.display = 'none'; 
+                    totalEl.innerText = `R$ ${totalGasto.toFixed(2).replace('.', ',')}`; 
+                    
+                    let textoAvisos = avisos[0];
+                    if (avisos.length > 1) { textoAvisos += " Além disso, " + avisos[1]; }
+
+                    const lowBalance = remaining < (budget * 0.15);
+                    
+                    let introText = "";
+                    if (remaining === 0) {
+                        introText = `Você gastou <strong>R$ ${totalGasto.toFixed(2).replace('.', ',')}</strong> e <strong>não sobrou nada!</strong>`;
+                    } else if (!lowBalance) {
+                        introText = `Você economizou e sobraram <strong>R$ ${remaining.toFixed(2).replace('.', ',')}</strong>`;
+                    } else {
+                        introText = `Você gastou <strong>R$ ${totalGasto.toFixed(2).replace('.', ',')}</strong> e sobrou apenas <strong>R$ ${remaining.toFixed(2).replace('.', ',')}</strong>`;
+                    }
+
+                    // CORREÇÃO AQUI: Removemos o ponto final manual para evitar quatro pontos (....)
+                    let message = `${introText}, mas atenção: ${textoAvisos} Guardar uma reserva de emergência maior é muito importante!`;
+                    if (lowBalance || remaining === 0) message += " Você precisa fazer escolhas melhores!";
+                    feedbackEl.innerHTML = message;
+                } else if (remaining >= (budget * 0.2)) {
+                    statusEl.innerText = "🌟 Você mandou bem!";
+                    statusEl.style.color = 'var(--success)';
+                    saldoLabel.style.display = 'block';
+                    saldoLabel.innerText = "Saldo na carteira:";
+                    totalEl.innerText = saldoDisplayFinal;
+                    feedbackEl.innerHTML = `Parabéns! Você cuidou do seu pet sem estourar o orçamento e ${remaining === 0 ? "<strong>não sobrou nada!</strong>" : "sobraram <strong>R$ " + remaining.toFixed(2).replace('.', ',') + "</strong>"}! Você é um tutor nota 10!`;
+                } else {
+                    statusEl.innerText = "Tente economizar mais!";
+                    statusEl.style.color = 'var(--warning)';
+                    saldoLabel.style.display = 'block';
+                    saldoLabel.innerText = "Saldo na carteira:";
+                    totalEl.innerText = saldoDisplayFinal;
+                    
+                    let textNoMoney = remaining === 0 
+                        ? "Você não estourou o orçamento, mas <strong>não sobrou nada!</strong>" 
+                        : `Você não estourou o orçamento, mas sobrou pouco dinheiro (<strong>R$ ${remaining.toFixed(2).replace('.', ',')}</strong>)`;
+                    
+                    feedbackEl.innerHTML = `${textNoMoney}. Tente economizar mais para ter uma reserva de emergência!`;
+                }
+            }
+            showScreen('screenResult');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DESAFIO DAS ESCOLHAS SAUDÁVEIS</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+        :root {
+            --primary: #a84191;
+            --primary-dark: #8a3578;
+            --secondary: #61c6ee;
+            --danger-color: #FF3131;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Fredoka One', cursive;
+            background: linear-gradient(135deg, #7dd3f0 0%, #61c6ee 100%);
+            user-select: none;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* ÁREA DELIMITADA DO JOGO */
+        #game-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 100%;
+            max-height: 850px;
+            background: linear-gradient(180deg, #f0e6f5 0%, #e4d0ef 100%);
+            box-shadow: 0 0 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        /* TELAS */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 20;
+            text-align: center;
+        }
+
+        #start-screen { background: linear-gradient(180deg, #f0e6f5 0%, #e4d0ef 100%); }
+        #game-screen { display: none; background: transparent; pointer-events: none; }
+        #end-screen { 
+            display: none; 
+            background-color: #f5edf9; 
+            justify-content: flex-start;
+            padding-top: 40px;
+        }
+
+        /* CARRINHO */
+        #cart {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px; 
+            height: 95px;
+            background-image: url('https://cdn-icons-png.flaticon.com/512/3081/3081840.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        #cart-contents {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+
+        .cart-item {
+            font-size: 1.4rem;
+            margin: -6px;
+            animation: bounceIn 0.4s cubic-bezier(0.36, 0, 0.66, -0.56);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* ITENS CAINDO */
+        .food-item {
+            position: absolute;
+            width: 80px; 
+            height: 80px;
+            cursor: pointer;
+            z-index: 40;
+            touch-action: none; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            filter: drop-shadow(0 3px 4px rgba(0,0,0,0.1));
+            pointer-events: auto;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--danger-color);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .stats {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            border: 3px solid var(--primary);
+            font-size: 1rem;
+            z-index: 50;
+            color: var(--primary);
+            box-shadow: 0 2px 0 var(--primary-dark);
+        }
+
+        .btn-main {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            border: 3px solid white;
+            box-shadow: 0 4px var(--primary-dark);
+            cursor: pointer;
+            margin-top: 5px;
+            z-index: 50;
+            position: relative;
+        }
+
+        .btn-main:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px var(--primary-dark);
+        }
+
+        .text-content {
+            width: min(100%, 390px);
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            border: 5px solid var(--secondary);
+            line-height: 1.2;
+            font-size: 0.95rem;
+            color: #333;
+            max-height: 40%;
+            box-sizing: border-box;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            pointer-events: none;
+            z-index: 60;
+            border-radius: 50%;
+        }
+
+        .trophy {
+            font-size: 4rem;
+            margin-bottom: 5px;
+        }
+
+        .mistake-tag {
+            background: #FFCDD2;
+            color: #C62828;
+            padding: 3px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin: 2px;
+            font-size: 0.8rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--primary);
+            text-shadow: 2px 2px 0 white;
+            line-height: 0.95;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .food-item { width: 70px; height: 70px; font-size: 2.8rem; }
+            h1 { font-size: 1.8rem; }
+            #cart { width: 130px; height: 85px; }
+            .trophy { font-size: 3.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <div class="close-btn" onclick="location.reload()">X</div>
+
+    <div id="stats-panel" class="stats" style="display: none;">
+        <div>PONTOS: <span id="score">0</span> | TEMPO: <span id="timer">30</span>S</div>
+    </div>
+
+    <div id="cart">
+        <div id="cart-contents"></div>
+    </div>
+
+    <!-- TELA INICIAL -->
+    <div id="start-screen" class="screen">
+        <h1>ESCOLHAS<br>SAUDÁVEIS</h1>
+        <div class="text-content">
+            <p>ALIMENTOS NATURAIS DÃO MUITA ENERGIA!</p>
+            <p class="highlight">CLIQUE NOS ITENS SAUDÁVEIS PARA ENCHER O CARRINHO!</p>
+        </div>
+        <button class="btn-main" onpointerdown="startGame()">COMEÇAR!</button>
+        <div style="height: 110px;"></div>
+    </div>
+
+    <!-- TELA DE JOGO -->
+    <div id="game-screen" class="screen"></div>
+
+    <!-- TELA FINAL -->
+    <div id="end-screen" class="screen">
+        <div id="trophy-container" class="trophy">🏆</div>
+        <h2 id="result-title">FIM!</h2>
+        <div id="result-message" class="text-content"></div>
+        <button class="btn-main" onpointerdown="location.reload()">JOGAR NOVAMENTE</button>
+        <div style="height: 120px; flex-shrink: 0;"></div>
+    </div>
+</div>
+
+<script>
+    const wrapper = document.getElementById('game-wrapper');
+    const scoreEl = document.getElementById('score');
+    const timerEl = document.getElementById('timer');
+    const statsPanel = document.getElementById('stats-panel');
+    const gameScreen = document.getElementById('game-screen');
+    const startScreen = document.getElementById('start-screen');
+    const endScreen = document.getElementById('end-screen');
+    const resultTitle = document.getElementById('result-title');
+    const resultMessage = document.getElementById('result-message');
+    const cartContents = document.getElementById('cart-contents');
+    const trophyContainer = document.getElementById('trophy-container');
+
+    let score = 0;
+    let timeLeft = 30;
+    let gameActive = false;
+    let spawnInterval;
+    let timerInterval;
+    let clickedUnhealthy = new Set();
+
+    const healthyFoods = [
+        { emoji: '🍎', name: 'MAÇÃ' }, { emoji: '🍌', name: 'BANANA' },
+        { emoji: '🥦', name: 'BRÓCOLIS' }, { emoji: '🥕', name: 'CENOURA' },
+        { emoji: '🥩', name: 'CARNE' }, { emoji: '🍇', name: 'UVA' },
+        { emoji: '🍉', name: 'MELANCIA' }, { emoji: '🌽', name: 'MILHO' },
+        { emoji: '🍗', name: 'FRANGO' }, { emoji: '🥬', name: 'ALFACE' }
+    ];
+
+    const unhealthyFoods = [
+        { emoji: '🍩', name: 'DONUT' }, { emoji: '🍦', name: 'SORVETE' },
+        { emoji: '🥤', name: 'REFRIGERANTE' }, { emoji: '🍕', name: 'PIZZA' },
+        { emoji: '🍔', name: 'HAMBÚRGUER' }, { emoji: '🍟', name: 'BATATA' },
+        { emoji: '🍫', name: 'DOCE' }
+    ];
+
+    function startGame() {
+        startScreen.style.display = 'none';
+        gameScreen.style.display = 'flex';
+        statsPanel.style.display = 'block';
+        gameActive = true;
+        score = 0;
+        timeLeft = 30;
+        clickedUnhealthy.clear();
+        cartContents.innerHTML = '';
+        scoreEl.innerText = score;
+        timerEl.innerText = timeLeft;
+
+        spawnInterval = setInterval(spawnItem, 1100);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerEl.innerText = timeLeft;
+            if (timeLeft <= 0) endGame();
+        }, 1000);
+    }
+
+    function spawnItem() {
+        if (!gameActive) return;
+
+        const isHealthy = Math.random() > 0.25;
+        const data = isHealthy 
+            ? healthyFoods[Math.floor(Math.random() * healthyFoods.length)]
+            : unhealthyFoods[Math.floor(Math.random() * unhealthyFoods.length)];
+
+        const item = document.createElement('div');
+        item.className = 'food-item';
+        item.innerHTML = data.emoji;
+        
+        const itemSize = window.innerWidth < 480 ? 70 : 80;
+        const maxLeft = wrapper.clientWidth - itemSize;
+        const startX = Math.random() * maxLeft;
+        
+        item.style.left = startX + 'px';
+        item.style.top = '-100px';
+
+        wrapper.appendChild(item);
+
+        let pos = -100;
+        const speed = 2.0 + Math.random() * 2.0;
+        const wrapperHeight = wrapper.clientHeight;
+        
+        const fall = setInterval(() => {
+            if (!gameActive) {
+                clearInterval(fall);
+                item.remove();
+                return;
+            }
+            pos += speed;
+            item.style.top = pos + 'px';
+
+            if (pos > wrapperHeight) {
+                clearInterval(fall);
+                item.remove();
+            }
+        }, 20);
+
+        item.onpointerdown = (e) => {
+            e.preventDefault(); 
+            if (isHealthy) {
+                score++;
+                scoreEl.innerText = score;
+                createConfetti(item.offsetLeft + (itemSize/2), item.offsetTop + (itemSize/2));
+                addItemToCart(data.emoji);
+            } else {
+                clickedUnhealthy.add(data.name);
+            }
+            item.remove();
+            clearInterval(fall);
+        };
+    }
+
+    function createConfetti(x, y) {
+        for (let i = 0; i < 10; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = x + 'px';
+            c.style.top = y + 'px';
+            c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            wrapper.appendChild(c);
+
+            const destX = (Math.random() - 0.5) * 120;
+            const destY = (Math.random() - 0.5) * 120;
+
+            c.animate([
+                { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                { transform: `translate(${destX}px, ${destY}px) scale(0)`, opacity: 0 }
+            ], { duration: 400, easing: 'ease-out' }).onfinish = () => c.remove();
+        }
+    }
+
+    function addItemToCart(emoji) {
+        const span = document.createElement('div');
+        span.className = 'cart-item';
+        span.innerHTML = emoji;
+        if (cartContents.children.length < 24) {
+            cartContents.appendChild(span);
+        }
+    }
+
+    function endGame() {
+        gameActive = false;
+        clearInterval(spawnInterval);
+        clearInterval(timerInterval);
+        gameScreen.style.display = 'none';
+        statsPanel.style.display = 'none';
+        endScreen.style.display = 'flex';
+
+        let message = "";
+        
+        if (score >= 10) {
+            trophyContainer.innerHTML = "🏆";
+            resultTitle.innerText = "PARABÉNS!";
+            resultTitle.style.color = "#a84191";
+            message = `VOCÊ PEGOU ${score} ITENS SAUDÁVEIS! ÓTIMAS ESCOLHAS!`;
+        } else if (score >= 5) {
+            trophyContainer.innerHTML = "⭐";
+            resultTitle.innerText = "MUITO BEM!";
+            resultTitle.style.color = "#FF914D";
+            message = `VOCÊ PEGOU ${score} ITENS SAUDÁVEIS. BOM TRABALHO!`;
+        } else {
+            trophyContainer.innerHTML = "🍎";
+            resultTitle.innerText = "TENTE DE NOVO!";
+            resultTitle.style.color = "#FF3131";
+            message = `ESCOLHA ITENS NATURAIS PARA TER ENERGIA!`;
+        }
+
+        if (clickedUnhealthy.size > 0) {
+            message += `<br><span style="font-size: 0.8rem; color: #666; font-weight: normal;">VOCÊ PEGOU ALGUNS ITENS QUE DEVEMOS EVITAR:</span><br>`;
+            clickedUnhealthy.forEach(name => {
+                message += `<span class="mistake-tag">${name}</span>`;
+            });
+        }
+
+        resultMessage.innerHTML = message;
+    }       
+</script>
+
+</body>
+</html>

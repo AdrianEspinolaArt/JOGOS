@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🌱 Jogo do Consumidor Consciente</title>
+    <style>
+        :root {
+            --primary-green: #3574ba;
+            --secondary-green: #5a9fd4;
+            --primary-blue: #3574ba;
+            --bg-body: #eef6ff;
+            --text-main: #1e3a5f;
+            --btn-bg: #dbe9f5;
+            --btn-border: #a8cce8;
+            --correct-color: #059669;
+            --error-color: #dc2626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 700px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(53, 116, 186, 0.15);
+            overflow: hidden;
+            border: 1px solid #a8cce8;
+        }
+
+        .header {
+            background-color: var(--primary-green);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: clamp(1.4em, 5vw, 1.8em);
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .status-bar {
+            background: #eef6ff;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            border-bottom: 2px solid #a8cce8;
+        }
+
+        @media (min-width: 500px) {
+            .status-bar {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #a8cce8;
+            border-radius: 12px;
+            background: white;
+        }
+
+        .status-item.danger {
+            border-color: var(--error-color);
+            background: #fef2f2;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .status-item .label {
+            font-size: 0.7em;
+            color: #4b5563;
+            display: block;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .status-item .value {
+            font-size: 1em;
+            font-weight: 800;
+            color: var(--primary-green);
+        }
+
+        .game-content {
+            padding: 25px;
+        }
+
+        .situation-card {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .situation-title {
+            font-size: 1.4em;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .situation-scenario {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: var(--btn-bg);
+            color: #1e3a8a;
+            border: 2px solid var(--btn-border);
+            padding: 18px 22px;
+            border-radius: 14px;
+            font-size: 1.05em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            line-height: 1.4;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .option-btn:hover {
+            background-color: #d1e6f9;
+            border-color: #7ab3db;
+            transform: translateY(-2px);
+        }
+
+        .option-btn.selected-correct {
+            background-color: var(--correct-color) !important;
+            border-color: var(--correct-color) !important;
+            color: white;
+        }
+
+        .option-btn.selected-incorrect {
+            background-color: var(--error-color) !important;
+            border-color: var(--error-color) !important;
+            color: white;
+        }
+
+        .feedback {
+            margin-top: 25px;
+            padding: 18px;
+            background-color: #eef6ff;
+            border: 2px solid #a8cce8;
+            border-radius: 15px;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .feedback.show { display: block; }
+
+        .feedback-text {
+            font-size: 1.05em;
+            color: #1e3a5f;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .next-btn {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 25px auto 0;
+            display: block;
+            width: 100%;
+            max-width: 250px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+        }
+
+        .next-btn.show { opacity: 1; pointer-events: auto; }
+        .next-btn:hover { background-color: #2a5f9e; transform: scale(1.02); }
+
+        .final-screen {
+            text-align: center;
+            padding: 30px 0;
+            display: none;
+        }
+
+        .final-screen.show { display: block; }
+
+        .final-score {
+            font-size: 4em;
+            margin: 15px 0;
+            color: var(--primary-green);
+            font-weight: 900;
+        }
+
+        .achievement-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin: 25px 0;
+        }
+
+        .achievement {
+            background: #fff;
+            color: var(--primary-green);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.95em;
+            font-weight: 700;
+            border: 2px solid #a8cce8;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .restart-btn {
+            background-color: var(--secondary-green);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            max-width: 280px;
+            margin-top: 30px;
+            transition: all 0.2s;
+        }
+
+        .restart-btn:hover { background-color: #2a5f9e; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🌱 Consumidor Consciente</h1>
+            <p>Missão: Aprender a cuidar do nosso planeta!</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item" id="money-status">
+                <span class="label">💰 Carteira</span>
+                <span class="value" id="money">R$ 50,00</span>
+            </div>
+            <div class="status-item" id="env-status">
+                <span class="label">🌍 Planeta</span>
+                <span class="value" id="environment">100%</span>
+            </div>
+            <div class="status-item">
+                <span class="label">⭐ Pontos</span>
+                <span class="value" id="score">0</span>
+            </div>
+            <div class="status-item">
+                <span class="label">📍 Fase</span>
+                <span class="value" id="current-situation">1/10</span>
+            </div>
+        </div>
+
+        <div class="game-content">
+            <div id="game-area">
+                <!-- Conteúdo dinâmico -->
+            </div>
+
+            <div class="final-screen" id="final-screen">
+                <h2 id="final-title">🌈 Missão Cumprida!</h2>
+                <div class="final-score" id="final-score">0</div>
+                <div id="final-message"></div>
+                <div class="achievement-container" id="achievements"></div>
+                <button class="restart-btn" onclick="restartGame()">Jogar Novamente</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameData = {
+            money: 50,
+            environment: 100,
+            score: 0,
+            currentSituation: 0,
+            gameOver: false
+        };
+
+        const situations = [
+            {
+                title: "🍎 Lanche da Escola",
+                scenario: "Na hora do recreio você sente fome. O que fazer?",
+                options: [
+                    { text: "Lanche completo na cantina (R$ 12)", cost: 12, points: 0, environmental: -10, feedback: "Comprar na cantina custa mais caro e gera mais embalagens plásticas!" },
+                    { text: "Sanduíche e suco de casa (R$ 3)", cost: 3, points: 10, environmental: 5, correct: true, feedback: "Incrível! Trazer de casa é saudável, econômico e ecológico!" },
+                    { text: "Apenas um salgado e água (R$ 5)", cost: 5, points: 5, environmental: 0, feedback: "Uma escolha equilibrada, mas trazer de casa ainda é melhor para o planeta!" },
+                    { text: "Não comer para poupar tudo", cost: 0, points: 2, environmental: 0, feedback: "Você pode trazer lanche de casa para não ficar com fome." }
+                ]
+            },
+            {
+                title: "🧸 Brinquedo Novo",
+                scenario: "Você viu um brinquedo legal, mas já tem vários parecidos.",
+                options: [
+                    { text: "Comprar agora mesmo (R$ 25)", cost: 25, points: 0, environmental: -15, feedback: "Comprar por impulso gera gasto desnecessário e mais lixo!" },
+                    { text: "Pegar emprestado com amigo", cost: 0, points: 5, environmental: 5, feedback: "Compartilhar brinquedos é uma forma divertida de brincar!" },
+                    { text: "Divertir-se com os que já tem", cost: 0, points: 10, environmental: 10, correct: true, feedback: "Isso aí! Valorizar o que temos é a base da consciência!" },
+                    { text: "Trocar um antigo por esse", cost: 0, points: 8, environmental: 8, feedback: "Trocar brinquedos é uma ótima ideia para ter novidades!" }
+                ]
+            },
+            {
+                title: "🚿 Banho Diário",
+                scenario: "Hora de se limpar! Como economizar água?",
+                options: [
+                    { text: "Banho de 20 min cantando", cost: 0, points: 0, environmental: -20, feedback: "Banhos muito longos desperdiçam muita água potável!" },
+                    { text: "Banho rápido de 5 min", cost: 0, points: 5, environmental: 5, feedback: "Banho rápido limpa igual e ajuda o meio ambiente!" },
+                    { text: "Desligar ao se ensaboar", cost: 0, points: 10, environmental: 15, correct: true, feedback: "Uau! Fechar a torneira enquanto se ensaboa salva litros de água!" },
+                    { text: "Deixar o chuveiro pingando", cost: 0, points: 2, environmental: -5, feedback: "Até pequenos pingos desperdiçados fazem falta!" }
+                ]
+            },
+            {
+                title: "👕 Camisa Favorita",
+                scenario: "Sua roupa preferida está com um furinho. E agora?",
+                options: [
+                    { text: "Comprar outra igual (R$ 30)", cost: 30, points: 0, environmental: -10, feedback: "Não precisa descartar uma roupa boa por causa de um buraquinho!" },
+                    { text: "Pedir para alguém costurar", cost: 2, points: 10, environmental: 15, correct: true, feedback: "Genial! Consertar roupas é a moda mais sustentável!" },
+                    { text: "Continuar usando assim", cost: 0, points: 5, environmental: 5, feedback: "Usar a roupa até o fim é consciente, mas consertar fica melhor!" },
+                    { text: "Transformar em pano de chão", cost: 0, points: 3, environmental: 5, feedback: "Reutilizar o tecido é bom, mas você ainda poderia usar a camisa!" }
+                ]
+            },
+            {
+                title: "💡 Luz no Quarto",
+                scenario: "Você terminou de ler no quarto e vai para a sala. E as luzes?",
+                options: [
+                    { text: "Deixar tudo aceso", cost: 0, points: 0, environmental: -15, feedback: "Luz ligada sem ninguém no quarto desperdiça energia!" },
+                    { text: "Apagar só a luz principal", cost: 0, points: 5, environmental: 5, feedback: "Boa iniciativa, mas desligar tudo é ainda melhor!" },
+                    { text: "Desligar tudo antes de sair", cost: 0, points: 10, environmental: 20, correct: true, feedback: "Nota 10! Apagar as luzes ajuda o planeta e economiza dinheiro!" },
+                    { text: "Deixar a TV ligada no mudo", cost: 0, points: 2, environmental: -5, feedback: "Aparelhos ligados gastam energia sem necessidade!" }
+                ]
+            },
+            {
+                title: "🎁 Presente Especial",
+                scenario: "Aniversário do melhor amigo! Qual o melhor presente?",
+                options: [
+                    { text: "O presente mais caro (R$ 40)", cost: 40, points: 2, environmental: -10, feedback: "O valor de um presente está no carinho, não no preço!" },
+                    { text: "Criar algo único com as mãos", cost: 5, points: 10, environmental: 15, correct: true, feedback: "Que carinho! Presentes manuais têm um valor sentimental gigante!" },
+                    { text: "Comprar algo útil (R$ 15)", cost: 15, points: 8, environmental: 0, feedback: "Presentes úteis são ótimos porque serão muito usados!" },
+                    { text: "Fazer um cartão caprichado", cost: 2, points: 9, environmental: 12, feedback: "Um cartão sincero é uma lembrança maravilhosa!" }
+                ]
+            },
+            {
+                title: "🍽️ Almoço Gostoso",
+                scenario: "Sobrou comida no seu prato no almoço. O que faz?",
+                options: [
+                    { text: "Jogar direto no lixo", cost: 0, points: 0, environmental: -15, feedback: "O desperdício de comida é um grande problema do mundo!" },
+                    { text: "Guardar para o lanche", cost: 0, points: 10, environmental: 15, correct: true, feedback: "Sensacional! Evitar o desperdício respeita a natureza!" },
+                    { text: "Comer sem vontade", cost: 0, points: 5, environmental: 5, feedback: "Respeite seu corpo! Sirva menos na próxima vez!" },
+                    { text: "Dar para o pet da família", cost: 0, points: 3, environmental: 0, feedback: "Atenção! Comida temperada pode não fazer bem para pets!" }
+                ]
+            },
+            {
+                title: "🚲 Passeio no Bairro",
+                scenario: "Vai visitar o vô que mora logo ali. Como ir?",
+                options: [
+                    { text: "Pedir carona de carro", cost: 5, points: 2, environmental: -10, feedback: "Para distâncias curtas, o carro polui sem necessidade!" },
+                    { text: "Ir de bike ou a pé", cost: 0, points: 10, environmental: 20, correct: true, feedback: "Aí sim! Zero poluição, muita saúde e diversão!" },
+                    { text: "Ir de patins ou skate", cost: 0, points: 9, environmental: 18, feedback: "Excelente! Diversão e transporte limpo!" },
+                    { text: "Pedir um transporte por app", cost: 15, points: 3, environmental: -5, feedback: "Além de custar caro, polui o ar da vizinhança!" }
+                ]
+            },
+            {
+                title: "📝 Caderno Escolar",
+                scenario: "O caderno do ano passado tem 50 folhas limpas.",
+                options: [
+                    { text: "Comprar um novo (R$ 20)", cost: 20, points: 0, environmental: -15, feedback: "Não precisa de um novo se o antigo ainda tem espaço!" },
+                    { text: "Continuar usando o antigo", cost: 0, points: 10, environmental: 20, correct: true, feedback: "Muito bem! Aproveitar o papel salva muitas árvores!" },
+                    { text: "Customizar a capa", cost: 3, points: 12, environmental: 18, feedback: "Show! Ficou novo, estiloso e você não gastou quase nada!" },
+                    { text: "Arrancar folhas para aviões", cost: 0, points: 2, environmental: 2, feedback: "O papel é precioso. Brinque, mas sem desperdiçar!" }
+                ]
+            },
+            {
+                title: "🎮 Sábado de Sol",
+                scenario: "Dia de folga! Como aproveitar o tempo?",
+                options: [
+                    { text: "Ir ao shopping gastar (R$ 30)", cost: 30, points: 0, environmental: -10, feedback: "Existem formas muito mais ricas de se divertir!" },
+                    { text: "Piquenique no parque", cost: 8, points: 10, environmental: 15, correct: true, feedback: "Perfeito! A natureza é o melhor playground do mundo!" },
+                    { text: "Assistir TV o dia todo", cost: 0, points: 3, environmental: -5, feedback: "Gasta energia e você perde a chance de brincar fora!" },
+                    { text: "Jogar bola com amigos", cost: 0, points: 10, environmental: 10, feedback: "Saúde, economia e amizade!" }
+                ]
+            }
+        ];
+
+        function updateStatus() {
+            document.getElementById('money').textContent = `R$ ${gameData.money.toFixed(2)}`;
+            document.getElementById('environment').textContent = `${gameData.environment}%`;
+            document.getElementById('score').textContent = gameData.score;
+            document.getElementById('current-situation').textContent = `${gameData.currentSituation + 1}/10`;
+
+            // Alertas visuais
+            const moneyStatus = document.getElementById('money-status');
+            const envStatus = document.getElementById('env-status');
+
+            if (gameData.money <= 10) moneyStatus.classList.add('danger');
+            else moneyStatus.classList.remove('danger');
+
+            if (gameData.environment <= 30) envStatus.classList.add('danger');
+            else envStatus.classList.remove('danger');
+        }
+
+        function displaySituation(index) {
+            if (index >= situations.length) {
+                showFinalScreen();
+                return;
+            }
+
+            const sit = situations[index];
+            const area = document.getElementById('game-area');
+            
+            area.innerHTML = `
+                <div class="situation-card">
+                    <h2 class="situation-title">${sit.title}</h2>
+                    <div class="situation-scenario">${sit.scenario}</div>
+                    <div class="options-grid">
+                        ${sit.options.map((opt, i) => 
+                            `<button class="option-btn" onclick="selectOption(${i})">${opt.text}</button>`
+                        ).join('')}
+                    </div>
+                    <div class="feedback" id="feedback">
+                        <div class="feedback-text" id="feedback-txt"></div>
+                    </div>
+                    <button class="next-btn" id="next-btn" onclick="nextSit()">Próxima Etapa →</button>
+                </div>
+            `;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function selectOption(idx) {
+            const sit = situations[gameData.currentSituation];
+            const opt = sit.options[idx];
+            const btns = document.querySelectorAll('.option-btn');
+            
+            btns.forEach(b => b.style.pointerEvents = 'none');
+            btns[idx].classList.add(opt.correct ? 'selected-correct' : 'selected-incorrect');
+            
+            gameData.money = Math.max(0, gameData.money - opt.cost);
+            gameData.environment = Math.max(0, Math.min(100, gameData.environment + opt.environmental));
+            gameData.score += opt.points;
+            
+            updateStatus();
+            
+            const feedback = document.getElementById('feedback');
+            document.getElementById('feedback-txt').textContent = opt.feedback;
+            feedback.classList.add('show');
+            
+            const nextBtn = document.getElementById('next-btn');
+
+            // Checar se o jogo deve acabar
+            if (gameData.money <= 0 || gameData.environment <= 0) {
+                gameData.gameOver = true;
+                nextBtn.textContent = "Ver Resultado Final";
+                nextBtn.onclick = () => showFinalScreen();
+            }
+
+            nextBtn.classList.add('show');
+        }
+
+        function nextSit() {
+            if (gameData.gameOver) {
+                showFinalScreen();
+                return;
+            }
+            gameData.currentSituation++;
+            displaySituation(gameData.currentSituation);
+            updateStatus();
+        }
+
+        function showFinalScreen() {
+            document.getElementById('game-area').style.display = 'none';
+            const screen = document.getElementById('final-screen');
+            const title = document.getElementById('final-title');
+            document.getElementById('final-score').textContent = gameData.score;
+            
+            let msg = "";
+            let medalhas = "";
+
+            if (gameData.money <= 0) {
+                title.textContent = "💸 Ops! Carteira Vazia";
+                msg = "Puxa! Seu dinheiro acabou. Lembre-se: economizar é muito importante para garantir que teremos o necessário no futuro. Tente equilibrar melhor seus gastos na próxima vez!";
+            } else if (gameData.environment <= 0) {
+                title.textContent = "⚠️ Alerta Ambiental";
+                msg = "Cuidado! Nossas escolhas prejudicaram demais o planeta. O meio ambiente é nossa casa e precisamos cuidar dele com carinho em cada pequena decisão!";
+            } else {
+                title.textContent = "🌈 Missão Cumprida!";
+                if(gameData.score >= 90) msg = "Espetacular! Você é um mestre da sustentabilidade.";
+                else if(gameData.score >= 65) msg = "Muito bem! Você toma decisões muito conscientes.";
+                else msg = "Bom começo! Que tal jogar de novo para aprender ainda mais?";
+
+                if(gameData.environment >= 90) medalhas += '<div class="achievement">🌍 Herói Ambiental</div>';
+                if(gameData.money >= 15) medalhas += '<div class="achievement">💰 Pequeno Investidor</div>';
+                if(gameData.score >= 80) medalhas += '<div class="achievement">🏆 Recordista</div>';
+            }
+
+            document.getElementById('final-message').innerHTML = `<p style="margin: 20px 0; font-size: 1.1em; color: var(--text-main); line-height: 1.5;">${msg}</p>`;
+            document.getElementById('achievements').innerHTML = medalhas || (gameData.gameOver ? "<p>Tente novamente para ganhar medalhas!</p>" : "<p>Quase lá! Tente ganhar medalhas na próxima!</p>");
+            screen.classList.add('show');
+        }
+
+        function restartGame() {
+            Object.assign(gameData, { money: 50, environment: 100, score: 0, currentSituation: 0, gameOver: false });
+            document.getElementById('final-screen').classList.remove('show');
+            document.getElementById('game-area').style.display = 'block';
+            updateStatus();
+            displaySituation(0);
+        }
+
+        updateStatus();
+        displaySituation(0);
+    </script>
+</body>
+</html>

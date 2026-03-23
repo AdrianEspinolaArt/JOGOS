@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mestre da Economia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #8b6bbf 0%, #623f92 100%);
+            color: #1E293B;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .choice-card {
+            transition: all 0.2s ease;
+            border-bottom: 6px solid rgba(0,0,0,0.1);
+        }
+        .choice-card:active {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+        }
+        .progress-bar {
+            transition: width 0.4s ease;
+        }
+        .lightbulb-glow {
+            filter: drop-shadow(0 0 10px #FCD34D);
+            animation: glow 2s infinite alternate;
+        }
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 5px #FCD34D); }
+            to { filter: drop-shadow(0 0 15px #FBBF24); }
+        }
+        .normal-weight {
+            font-weight: 400;
+        }
+        b, strong {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+
+    <!-- HUD -->
+    <div id="game-hud" class="hidden fixed top-0 w-full max-w-2xl px-4 pt-4 z-50">
+        <div class="bg-white rounded-3xl p-4 shadow-xl border-2 border-[#ed6b1c] flex justify-between items-center">
+            <div class="flex flex-col">
+                <span class="text-xs text-gray-400 uppercase font-bold tracking-wider">Pontos</span>
+                <span id="score-text" class="text-2xl font-bold text-[#623f92]">0</span>
+            </div>
+            <div class="flex-1 px-8">
+                <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+                    <div id="progress-line" class="progress-bar bg-[#ed6b1c] h-full" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="flex flex-col items-end">
+                <span class="text-xs text-gray-400 uppercase font-bold tracking-wider">Tempo</span>
+                <span id="timer-text" class="text-2xl font-bold text-[#ed6b1c]">120s</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA INICIAL -->
+    <div id="screen-start" class="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-lg">
+        <div class="mb-6 lightbulb-glow">
+            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 21H15M9 18H15M12 2C8.13401 2 5 5.13401 5 9C5 11.383 6.191 13.487 8 14.719V17H16V14.719C17.809 13.487 19 11.383 19 9C19 5.13401 15.866 2 12 2Z" stroke="#FBBF24" stroke-width="2" fill="#FEF3C7"/>
+            </svg>
+        </div>
+        <h1 class="text-5xl font-bold text-white mb-4 leading-none uppercase">Mestre da<br><span class="text-white">Economia</span></h1>
+        <p class="text-lg text-white mb-8 px-4 normal-weight leading-relaxed">
+            Para ajudar sua família a economizar, você precisa fazer escolhas inteligentes. O desperdício de água e luz pesa no bolso e prejudica o planeta. Você precisa <b>pensar rápido para vencer o desperdício</b>. Você consegue ser um mestre da economia?
+        </p>
+        <button onclick="startGame()" class="bg-[#623f92] hover:bg-[#7b52b3] text-white text-2xl font-bold px-12 py-5 rounded-[2rem] shadow-[0_8px_0_#4a2e6e] active:translate-y-1 active:shadow-none transition-all">
+            COMEÇAR O DESAFIO
+        </button>
+    </div>
+
+    <!-- TELA DO JOGO -->
+    <div id="screen-game" class="hidden flex-1 w-full max-w-2xl flex flex-col items-center justify-center p-6 pt-24">
+        <div class="bg-white w-full rounded-[2rem] p-10 shadow-2xl border-2 border-[#ed6b1c]/30 text-center relative">
+            <h2 id="level-desc" class="text-3xl md:text-4xl font-bold mb-12 leading-tight">Pergunta principal aqui.</h2>
+            
+            <div id="choices-grid" class="grid grid-cols-1 gap-6">
+                <!-- Botões via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK MODAL (QUADRADO E PEQUENO) -->
+    <div id="modal-feedback" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#4a2e6e]/60 backdrop-blur-md">
+        <div class="bg-white rounded-2xl p-6 max-w-xs w-full text-center shadow-2xl border-2 border-[#ed6b1c]">
+            <div id="fb-emoji" class="text-5xl mb-3">🌟</div>
+            <h3 id="fb-title" class="text-2xl font-bold mb-2">FEEDBACK</h3>
+            <div id="fb-text" class="text-gray-600 text-base mb-6 normal-weight leading-tight">Explicação.</div>
+            <button onclick="closeFeedback()" class="w-full bg-[#623f92] text-white py-3 rounded-full font-bold text-lg shadow-[0_4px_0_#4a2e6e]">
+                Próximo
+            </button>
+        </div>
+    </div>
+
+    <!-- TELA FINAL -->
+    <div id="screen-end" class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <div class="bg-white rounded-[3.5rem] p-10 shadow-2xl border-4 border-[#ed6b1c] max-w-md w-full">
+            <h2 class="text-4xl font-bold text-[#623f92] mb-6 uppercase">Missão concluída!</h2>
+            <div class="flex flex-col items-center mb-8">
+                <span class="text-gray-400 font-bold uppercase tracking-widest text-sm">Sua pontuação</span>
+                <span id="final-score" class="text-7xl font-bold text-[#623f92]">0</span>
+            </div>
+            <div id="final-message" class="text-lg text-gray-600 mb-8 normal-weight">Mensagem final.</div>
+            <button onclick="location.reload()" class="w-full bg-[#623f92] text-white py-5 rounded-3xl text-2xl font-bold shadow-[0_6px_0_#4a2e6e]">
+                Recomeçar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const QUESTIONS = [
+            {
+                desc: "São 10h da manhã e a sala está com as cortinas fechadas. O que você faz?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "Abro as cortinas e apago a luz", pts: 100, fb: "Durante o dia, os raios solares iluminam os ambientes de graça. Aproveite a luz natural.", correct: true },
+                    { t: "Deixo as cortinas fechadas e a luz acesa", pts: 0, fb: "Isso é desperdício. As cortinas abertas ajudam a economizar energia elétrica durante o dia.", correct: false }
+                ]
+            },
+            {
+                desc: "Sua família vai pintar a casa para economizar luz. Qual cor ajuda mais?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "Cores escuras como azul ou preto", pts: 0, fb: "Cores escuras absorvem a luz, o que faz você precisar de mais lâmpadas ligadas.", correct: false },
+                    { t: "Cores claras como branco ou gelo", pts: 100, fb: "Cores claras refletem a luz e deixam a casa iluminada por mais tempo.", correct: true }
+                ]
+            },
+            {
+                desc: "Você terminou de ver um filme na TV e vai para outro cômodo. O que faz?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "Apago a luz e desligo a televisão", pts: 100, fb: "Sempre que for sair de um ambiente, apague a luz para economizar no orçamento familiar.", correct: true },
+                    { t: "Deixo a luz ligada para quando voltar", pts: 0, fb: "Mesmo que volte logo, deixar luzes acesas sem ninguém no cômodo é um gasto desnecessário.", correct: false }
+                ]
+            },
+            {
+                desc: "Como usar a água da torneira de forma inteligente ao escovar os dentes?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "Deixo a água correndo sempre", pts: 0, fb: "A água é preciosa. Só abra a torneira na hora de enxaguar a boca.", correct: false },
+                    { t: "Fecho a torneira enquanto escovo os dentes", pts: 100, fb: "Manter a torneira aberta sem uso gasta muita água tratada sem necessidade.", correct: true }
+                ]
+            },
+            {
+                desc: "A calçada está cheia de folhas secas. Qual a melhor ferramenta para limpar?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "A vassoura limpa a calçada sem gastar nada", pts: 100, fb: "Usar a mangueira para limpar gasta centenas de litros de água. A vassoura limpa bem e não gasta nada.", correct: true },
+                    { t: "Uso o jato forte da mangueira", pts: 0, fb: "Use água apenas quando for realmente necessário lavar. E prefira um balde.", correct: false }
+                ]
+            },
+            {
+                desc: "O banho está muito gostoso, mas o tempo está passando. O que fazer?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "Fico cantando e brincando na água", pts: 0, fb: "Cuidado. O chuveiro é um dos aparelhos que mais gasta energia elétrica em uma casa.", correct: false },
+                    { t: "Tomo um banho rápido e eficiente", pts: 100, fb: "Banhos rápidos economizam água e também a energia elétrica do chuveiro.", correct: true }
+                ]
+            },
+            {
+                desc: "Você percebeu que uma torneira está pingando sem parar. Qual a ação correta?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "Aviso um adulto imediatamente", pts: 100, fb: "Uma torneira pingando pode desperdiçar até 40 litros de água por dia. Avise sempre.", correct: true },
+                    { t: "Ignoro as gotas pequenas", pts: 0, fb: "Pequenas gotas se tornam grandes desperdícios no final do mês. Chame um adulto.", correct: false }
+                ]
+            },
+            {
+                desc: "O recreio começou e a luz da sala ficou acesa por engano. O que você faz?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "Deixo acesa pois não é minha casa", pts: 0, fb: "Economizar recursos ajuda o planeta e a escola. Seja um mestre em qualquer lugar.", correct: false },
+                    { t: "Volto para apagar a luz da sala", pts: 100, fb: "A economia consciente deve ser praticada em todos os locais, não apenas na sua casa.", correct: true }
+                ]
+            },
+            {
+                desc: "Você está fazendo a lição, mas a TV está ligada e ninguém está vendo. Como agir?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "Desligo a TV que ninguém está vendo", pts: 100, fb: "Usar aparelhos sem prestar atenção neles é uma forma silenciosa de desperdício.", correct: true },
+                    { t: "Deixo o aparelho ligado", pts: 0, fb: "Foque em apenas uma atividade e desligue os aparelhos que não estiver usando.", correct: false }
+                ]
+            },
+            {
+                desc: "Por que é importante observar e anotar quando apagamos uma luz?",
+                color: "text-[#623f92]",
+                choices: [
+                    { t: "Para ocupar o tempo vago", pts: 0, fb: "Anotar nos ajuda a enxergar o desperdício que antes era invisível e automático.", correct: false },
+                    { t: "Para criar o hábito de economizar", pts: 100, fb: "Observar e anotar ajuda a perceber onde podemos melhorar o planejamento da família.", correct: true }
+                ]
+            }
+        ];
+
+        let score = 0;
+        let currentQ = 0;
+        let timer = 120;
+        let timerInterval;
+
+        function startGame() {
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            document.getElementById('game-hud').classList.remove('hidden');
+            renderQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById('timer-text').innerText = timer + "s";
+                if (timer <= 0) endGame();
+            }, 1000);
+        }
+
+        function renderQuestion() {
+            const q = QUESTIONS[currentQ];
+            const descEl = document.getElementById('level-desc');
+            descEl.innerText = q.desc;
+            descEl.className = `text-3xl md:text-4xl font-bold mb-12 leading-tight ${q.color}`;
+            
+            const grid = document.getElementById('choices-grid');
+            grid.innerHTML = '';
+            
+            const shuffledChoices = [...q.choices].sort(() => Math.random() - 0.5);
+            
+            shuffledChoices.forEach((choice, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `choice-card w-full p-6 rounded-[2rem] text-xl font-bold text-left flex items-center gap-4 bg-[#623f92] text-white shadow-[0_6px_0_#4a2e6e]`;
+                btn.innerHTML = `<span class="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold shrink-0">${idx === 0 ? 'A' : 'B'}</span> <span class="normal-weight">${choice.t}.</span>`;
+                btn.onclick = () => selectChoice(choice);
+                grid.appendChild(btn);
+            });
+
+            const progress = ((currentQ) / QUESTIONS.length) * 100;
+            document.getElementById('progress-line').style.width = progress + "%";
+        }
+
+        function selectChoice(choice) {
+            score += choice.pts;
+            document.getElementById('score-text').innerText = score;
+
+            const modal = document.getElementById('modal-feedback');
+            const title = document.getElementById('fb-title');
+            const emoji = document.getElementById('fb-emoji');
+            
+            if (choice.pts > 0) {
+                title.innerText = "MUITO BEM!";
+                title.className = "text-3xl font-bold mb-2 text-[#22c55e]";
+                emoji.innerText = "🌟";
+            } else {
+                title.innerText = "ATENÇÃO!";
+                title.className = "text-3xl font-bold mb-2 text-[#ed6b1c]";
+                emoji.innerText = "💡";
+            }
+
+            document.getElementById('fb-text').innerHTML = choice.fb;
+            modal.classList.remove('hidden');
+        }
+
+        function closeFeedback() {
+            document.getElementById('modal-feedback').classList.add('hidden');
+            currentQ++;
+            if (currentQ < QUESTIONS.length) {
+                renderQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('game-hud').classList.add('hidden');
+            document.getElementById('screen-end').classList.remove('hidden');
+            
+            document.getElementById('final-score').innerText = score;
+            const msg = document.getElementById('final-message');
+            
+            if (score === 1000) msg.innerHTML = "Excelente! Você é um verdadeiro mestre e sabe exatamente como cuidar dos recursos da sua família!";
+            else if (score >= 700) msg.innerHTML = "Bom trabalho! Suas escolhas ajudaram muito, mas tente observar ainda mais os detalhes para não desperdiçar nada.";
+            else msg.innerHTML = "O desperdício ganhou desta vez. Que tal pensar mais em cada situação e tentar de novo para melhorar sua pontuação?";
+        }
+    </script>
+</body>
+</html>
