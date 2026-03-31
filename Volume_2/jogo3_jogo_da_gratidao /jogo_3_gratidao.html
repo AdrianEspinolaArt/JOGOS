@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DESAFIO DOS BALÕES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #FFD93D;
+            --cor-secundaria: #FF6B6B;
+            --cor-viva: #4D96FF;
+            --cor-sucesso: #6BCB77;
+            --cor-texto: #2c3e50;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            text-transform: uppercase; /* FORÇA TUDO EM CAIXA ALTA */
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #4facfe;
+            color: var(--cor-texto);
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #cenario {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #00d2ff 0%, #3a7bd5 100%);
+        }
+
+        /* Botão Fechar */
+        .btn-fechar {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 55px;
+            height: 55px;
+            background: white;
+            border: 5px solid var(--cor-secundaria);
+            border-radius: 50%;
+            color: var(--cor-secundaria);
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Telas Principais */
+        .tela {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            z-index: 500;
+        }
+
+        #tela-inicio {
+            background: linear-gradient(135deg, #FF9F43 0%, #FF6B6B 100%);
+        }
+
+        #tela-fim {
+            background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
+        }
+
+        .moldura {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 40px;
+            border: 12px solid var(--cor-primaria);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            max-width: 650px;
+            width: 92%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #tela-fim .moldura {
+            border-color: var(--cor-sucesso);
+        }
+
+        .escondido { display: none !important; }
+
+        h1 {
+            font-size: 2.8rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            line-height: 1;
+        }
+
+        p {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            line-height: 1.3;
+            color: #34495e;
+        }
+
+        .btn-principal {
+            background: var(--cor-sucesso);
+            color: white;
+            border: none;
+            padding: 25px 70px;
+            font-size: 2rem;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: 0 10px 0 #4e9c56;
+            font-family: 'Fredoka', sans-serif;
+            transition: all 0.1s;
+        }
+
+        .btn-principal:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #4e9c56;
+        }
+
+        /* Balão Grande para Leitura */
+        .balao-container {
+            position: absolute;
+            width: 190px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            filter: drop-shadow(0 10px 25px rgba(0,0,0,0.2));
+        }
+
+        .balao-corpo {
+            position: relative;
+            width: 175px;
+            height: 210px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: white;
+            border: 4px solid rgba(255,255,255,0.4);
+            box-shadow: inset -15px -15px 30px rgba(0,0,0,0.2);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.1;
+        }
+
+        .balao-corda {
+            width: 3px;
+            height: 70px;
+            background: rgba(255,255,255,0.6);
+            position: relative;
+        }
+
+        .balao-no {
+            width: 14px;
+            height: 10px;
+            background: inherit;
+            border-radius: 4px;
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            pointer-events: none;
+            z-index: 400;
+        }
+
+        .info-box {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border: 5px solid var(--cor-viva);
+        }
+
+        /* Feedback Pop */
+        .feedback-pop {
+            position: absolute;
+            pointer-events: none;
+            font-size: 2.5rem;
+            font-weight: bold;
+            z-index: 600;
+            animation: popUp 0.8s forwards;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        @keyframes popUp {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.8) translateY(-70px); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="cenario">
+        <button class="btn-fechar" onclick="location.reload()">✕</button>
+
+        <!-- HUD -->
+        <div id="hud" class="escondido">
+            <div class="info-box" style="color: #27ae60;">🌟 PONTOS: <span id="val-pontos">0</span></div>
+            <div class="info-box" style="color: #e67e22;">⏳ TEMPO: <span id="val-tempo">45</span>S</div>
+        </div>
+
+        <!-- Tela Inicial -->
+        <div id="tela-inicio" class="tela">
+            <div class="moldura">
+                <div style="font-size: 90px; margin-bottom: 10px;">🎈</div>
+                <h1>BALÕES DA GRATIDÃO</h1>
+                <p>
+                    <b>LEIA COM ATENÇÃO:</b> <br><br>
+                    ESTOURE APENAS OS BALÕES QUE DIZEM <b>COISAS BOAS</b>. <br>
+                    DEIXE AS RECLAMAÇÕES SUBIREM!
+                </p>
+                <button class="btn-principal" onclick="começarJogo()">VAMOS LÁ!</button>
+            </div>
+        </div>
+
+        <!-- Tela Final -->
+        <div id="tela-fim" class="tela escondido">
+            <div class="moldura">
+                <h1 id="fim-titulo">TEMPO ESGOTADO!</h1>
+                <p id="fim-texto">VOCÊ FOI INCRÍVEL!</p>
+                <div style="font-size: 4.5rem; color: #27ae60; font-weight: bold; margin: 10px 0;">
+                    <span id="pontos-finais">0</span>
+                </div>
+                <button class="btn-principal" onclick="location.reload()">JOGAR DE NOVO</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const frasesGratidao = [
+            "QUE BOM QUE TENHO AMIGOS!",
+            "EU AMO A MINHA FAMÍLIA.",
+            "SOU GRATO POR PODER ESTUDAR.",
+            "SOU FELIZ PORQUE TENHO SAÚDE.",
+            "ADORO MINHA PROFESSORA!",
+            "GOSTO MUITO DE IR PARA A ESCOLA.",
+            "TENHO TUDO QUE PRECISO.",
+            "EU ME SINTO MUITO BEM HOJE."
+        ];
+
+        const frasesReclamacao = [
+            "NÃO GOSTO DESSA COMIDA.",
+            "NÃO QUERO ESTUDAR.",
+            "ODEIO FAZER PROVA!",
+            "DETESTO TANTO CALOR.",
+            "ESSA ROUPA É FEIA!",
+            "MEUS TÊNIS ESTÃO APERTADOS.",
+            "ESSA CADEIRA É DURA.",
+            "ISSO TEM GOSTO RUIM"
+        ];
+
+        const coresBaloes = [
+            "#FF6B6B", "#4ECDC4", "#FF9F43", 
+            "#4D96FF", "#9B59B6", "#F1C40F", "#E67E22",
+            "#1ABC9C", "#D35400", "#C0392B", "#27AE60"
+        ];
+
+        let pontos = 0;
+        let acertos = 0;
+        let erros = 0;
+        let tempo = 45;
+        let jogoAtivo = false;
+        const cenario = document.getElementById('cenario');
+        const valPontos = document.getElementById('val-pontos');
+        const valTempo = document.getElementById('val-tempo');
+
+        function começarJogo() {
+            document.getElementById('tela-inicio').classList.add('escondido');
+            document.getElementById('hud').classList.remove('escondido');
+            
+            jogoAtivo = true;
+            pontos = 0;
+            acertos = 0;
+            erros = 0;
+            tempo = 45;
+            valPontos.innerText = pontos;
+            valTempo.innerText = tempo;
+
+            const interval = setInterval(() => {
+                if (!jogoAtivo) {
+                    clearInterval(interval);
+                    return;
+                }
+                tempo--;
+                valTempo.innerText = tempo;
+                if (tempo <= 0) encerrarJogo();
+            }, 1000);
+
+            loopCriacao();
+        }
+
+        function loopCriacao() {
+            if (!jogoAtivo) return;
+            criarBalao();
+            const proximo = Math.max(700, 1800 - (45 - tempo) * 20);
+            setTimeout(loopCriacao, proximo);
+        }
+
+        function criarBalao() {
+            const ehGratidao = Math.random() > 0.4;
+            const frases = ehGratidao ? frasesGratidao : frasesReclamacao;
+            const frase = frases[Math.floor(Math.random() * frases.length)];
+            const corAleatoria = coresBaloes[Math.floor(Math.random() * coresBaloes.length)];
+
+            const container = document.createElement('div');
+            container.className = 'balao-container';
+            
+            container.innerHTML = `
+                <div class="balao-corpo" style="background-color: ${corAleatoria}">${frase}</div>
+                <div class="balao-corda"><div class="balao-no" style="background-color: ${corAleatoria}"></div></div>
+            `;
+
+            const larguraBalao = 190;
+            const xAleatorio = Math.random() * (window.innerWidth - larguraBalao);
+            container.style.left = xAleatorio + 'px';
+            container.style.bottom = '-300px';
+
+            container.onclick = (e) => {
+                if (!jogoAtivo) return;
+                estourarBalao(ehGratidao, container, e.clientX, e.clientY);
+            };
+
+            cenario.appendChild(container);
+
+            const velocidade = 6000 + Math.random() * 3000;
+            const animacao = container.animate([
+                { bottom: '-300px', transform: 'translateX(0px) rotate(0deg)' },
+                { bottom: '110vh', transform: `translateX(${(Math.random() - 0.5) * 150}px) rotate(${(Math.random() - 0.5) * 25}deg)` }
+            ], {
+                duration: velocidade,
+                easing: 'linear'
+            });
+
+            animacao.onfinish = () => {
+                if (container.parentNode) container.remove();
+            };
+        }
+
+        function estourarBalao(ehGratidao, elemento, x, y) {
+            const feed = document.createElement('div');
+            feed.className = 'feedback-pop';
+            feed.style.left = x + 'px';
+            feed.style.top = y + 'px';
+
+            if (ehGratidao) {
+                pontos += 10;
+                acertos++;
+                feed.innerText = "🎈 VIVA!";
+                feed.style.color = "#27ae60";
+            } else {
+                pontos = Math.max(0, pontos - 5);
+                erros++;
+                feed.innerText = "💥 OPS...";
+                feed.style.color = "#e74c3c";
+                
+                cenario.animate([
+                    { transform: 'translateX(0)' },
+                    { transform: 'translateX(-10px)' },
+                    { transform: 'translateX(10px)' },
+                    { transform: 'translateX(0)' }
+                ], { duration: 120 });
+            }
+
+            valPontos.innerText = pontos;
+            cenario.appendChild(feed);
+            
+            elemento.style.transform = "scale(1.5)";
+            elemento.style.opacity = "0";
+            setTimeout(() => {
+                elemento.remove();
+                feed.remove();
+            }, 500);
+        }
+
+        function encerrarJogo() {
+            jogoAtivo = false;
+            document.getElementById('hud').classList.add('escondido');
+            document.getElementById('tela-fim').classList.remove('escondido');
+            document.getElementById('pontos-finais').innerText = pontos;
+
+            const titulo = document.getElementById('fim-titulo');
+            const texto = document.getElementById('fim-texto');
+            
+            const totalClicados = acertos + erros;
+
+            // LÓGICA DE FEEDBACK PERSONALIZADA
+            if (totalClicados < 8) {
+                titulo.innerText = "PROCURE SE ESFORÇAR.";
+                texto.innerText = "VOCÊ ESTÁ NO CAMINHO CERTO.";
+            } else if (erros > acertos) {
+                titulo.innerText = "FIQUE ATENTO!";
+                texto.innerText = "VOCÊ DEVE ESCOLHER FRASES DE GRATIDÃO. TENTE NOVAMENTE.";
+            } else if (acertos >= 12) {
+                titulo.innerText = "PARABÉNS!";
+                texto.innerText = "VOCÊ SABE O QUE É GRATIDÃO!";
+            } else {
+                // Caso médio (equilibrado ou poucos acertos mas sem muitos erros)
+                titulo.innerText = "BOM TRABALHO!";
+                texto.innerText = "CONTINUE PRATICANDO A GRATIDÃO!";
+            }
+
+            document.querySelectorAll('.balao-container').forEach(b => b.remove());
+        }
+
+        document.addEventListener('touchstart', function (event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
