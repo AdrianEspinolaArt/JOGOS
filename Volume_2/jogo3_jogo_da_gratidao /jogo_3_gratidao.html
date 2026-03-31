@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DESAFIO DOS BALÕES</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
         :root {
-            --cor-primaria: #FFD93D;
-            --cor-secundaria: #FF6B6B;
-            --cor-viva: #4D96FF;
-            --cor-sucesso: #6BCB77;
-            --cor-texto: #2c3e50;
+            --primary: #a84191;
+            --primary-dark: #8a3578;
+            --secondary: #61c6ee;
+            --danger-color: #FF3131;
+            --success-color: #2ca95e;
+            --text-color: #333;
         }
 
         * {
@@ -24,18 +25,19 @@
         }
 
         body {
-            font-family: 'Fredoka', sans-serif;
-            background-color: #4facfe;
-            color: var(--cor-texto);
+            font-family: 'Fredoka One', cursive;
+            background: linear-gradient(135deg, #7dd3f0 0%, #61c6ee 100%);
+            color: var(--text-color);
             overflow: hidden;
             touch-action: none;
+            text-transform: uppercase;
         }
 
         #cenario {
             position: relative;
             width: 100vw;
             height: 100vh;
-            background: linear-gradient(to bottom, #00d2ff 0%, #3a7bd5 100%);
+            background: linear-gradient(180deg, #f0e6f5 0%, #e4d0ef 100%);
         }
 
         /* Botão Fechar */
@@ -43,20 +45,20 @@
             position: absolute;
             top: 15px;
             right: 15px;
-            width: 55px;
-            height: 55px;
-            background: white;
-            border: 5px solid var(--cor-secundaria);
+            width: 36px;
+            height: 36px;
+            background: var(--danger-color);
+            border: 2px solid white;
             border-radius: 50%;
-            color: var(--cor-secundaria);
-            font-size: 28px;
+            color: white;
+            font-size: 14px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: none;
         }
 
         /* Telas Principais */
@@ -72,63 +74,58 @@
             z-index: 500;
         }
 
-        #tela-inicio {
-            background: linear-gradient(135deg, #FF9F43 0%, #FF6B6B 100%);
-        }
+        #tela-inicio { background: linear-gradient(135deg, #7dd3f0 0%, #61c6ee 100%); }
 
-        #tela-fim {
-            background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
-        }
+        #tela-fim { background: linear-gradient(135deg, #7dd3f0 0%, #61c6ee 100%); }
 
         .moldura {
             background: white;
-            padding: 40px 30px;
-            border-radius: 40px;
-            border: 12px solid var(--cor-primaria);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            max-width: 650px;
+            padding: 30px 24px;
+            border-radius: 24px;
+            border: 5px solid var(--secondary);
+            box-shadow: none;
+            max-width: 760px;
             width: 92%;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        #tela-fim .moldura {
-            border-color: var(--cor-sucesso);
-        }
+        #tela-fim .moldura { border-color: var(--secondary); }
 
         .escondido { display: none !important; }
 
         h1 {
-            font-size: 2.8rem;
-            color: #2c3e50;
+            font-size: clamp(1.6rem, 7vw, 2.4rem);
+            color: var(--primary);
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.6);
             margin-bottom: 20px;
-            line-height: 1;
+            line-height: 1.1;
         }
 
         p {
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 4.4vw, 1.35rem);
             margin-bottom: 30px;
             line-height: 1.3;
-            color: #34495e;
+            color: var(--text-color);
         }
 
         .btn-principal {
-            background: var(--cor-sucesso);
+            background: var(--primary);
             color: white;
-            border: none;
-            padding: 25px 70px;
-            font-size: 2rem;
-            border-radius: 60px;
+            border: 3px solid white;
+            padding: 14px 36px;
+            font-size: clamp(1rem, 4vw, 1.45rem);
+            border-radius: 30px;
             cursor: pointer;
-            box-shadow: 0 10px 0 #4e9c56;
-            font-family: 'Fredoka', sans-serif;
+            box-shadow: 0 4px var(--primary-dark);
+            font-family: 'Fredoka One', cursive;
             transition: all 0.1s;
         }
 
         .btn-principal:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #4e9c56;
+            transform: translateY(3px);
+            box-shadow: 0 1px var(--primary-dark);
         }
 
         /* Balão Grande para Leitura */
@@ -139,7 +136,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            filter: drop-shadow(0 10px 25px rgba(0,0,0,0.2));
+            filter: drop-shadow(0 8px 18px rgba(0,0,0,0.18));
         }
 
         .balao-corpo {
@@ -182,19 +179,19 @@
             left: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
             pointer-events: none;
             z-index: 400;
         }
 
         .info-box {
             background: white;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1.6rem;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 1rem;
             font-weight: bold;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            border: 5px solid var(--cor-viva);
+            box-shadow: 0 2px 0 var(--primary-dark);
+            border: 3px solid var(--primary);
         }
 
         /* Feedback Pop */
@@ -206,6 +203,48 @@
             z-index: 600;
             animation: popUp 0.8s forwards;
             text-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .icone-inicio {
+            font-size: 80px;
+            margin-bottom: 10px;
+        }
+
+        .info-pontos { color: var(--success-color); }
+        .info-tempo { color: #e67e22; }
+
+        .pontos-finais-wrap {
+            font-size: 4rem;
+            color: var(--success-color);
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 480px) {
+            .moldura {
+                padding: 24px 16px;
+                width: 95%;
+            }
+
+            .balao-container {
+                width: 158px;
+            }
+
+            .balao-corpo {
+                width: 145px;
+                height: 180px;
+                font-size: 1.05rem;
+                padding: 18px;
+            }
+
+            #hud {
+                top: 12px;
+                left: 12px;
+            }
+
+            .icone-inicio {
+                font-size: 64px;
+            }
         }
 
         @keyframes popUp {
@@ -221,15 +260,15 @@
         <button class="btn-fechar" onclick="location.reload()">✕</button>
 
         <!-- HUD -->
-        <div id="hud" class="escondido">
-            <div class="info-box" style="color: #27ae60;">🌟 PONTOS: <span id="val-pontos">0</span></div>
-            <div class="info-box" style="color: #e67e22;">⏳ TEMPO: <span id="val-tempo">45</span>S</div>
+            <div id="hud" class="escondido">
+            <div class="info-box info-pontos">🌟 PONTOS: <span id="val-pontos">0</span></div>
+            <div class="info-box info-tempo">⏳ TEMPO: <span id="val-tempo">45</span>S</div>
         </div>
 
         <!-- Tela Inicial -->
         <div id="tela-inicio" class="tela">
             <div class="moldura">
-                <div style="font-size: 90px; margin-bottom: 10px;">🎈</div>
+                <div class="icone-inicio">🎈</div>
                 <h1>BALÕES DA GRATIDÃO</h1>
                 <p>
                     <b>LEIA COM ATENÇÃO:</b> <br><br>
@@ -245,7 +284,7 @@
             <div class="moldura">
                 <h1 id="fim-titulo">TEMPO ESGOTADO!</h1>
                 <p id="fim-texto">VOCÊ FOI INCRÍVEL!</p>
-                <div style="font-size: 4.5rem; color: #27ae60; font-weight: bold; margin: 10px 0;">
+                <div class="pontos-finais-wrap">
                     <span id="pontos-finais">0</span>
                 </div>
                 <button class="btn-principal" onclick="location.reload()">JOGAR DE NOVO</button>
