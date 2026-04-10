@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COLHEITA DE MILHO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #da5d64;
+            --primary-dark: #d92f4f;
+            --secondary: #1b9638;
+            --secondary-dark: #156e2a;
+            --panel-yellow: #fff9c4;
+            --panel-yellow-border: #fbc02d;
+            --panel-yellow-shadow: #f9a825;
+            --bg-gradient: linear-gradient(135deg, #6cb52d 0%, #1b9638 100%);
+            --maze-wall: #2e7d32;
+            --maze-path: #efe6dc;
+            --maze-border: #3e2723;
+            --maze-bg: #5d4037;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Fredoka One', cursive, sans-serif;
+            background: var(--bg-gradient);
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+            color: var(--primary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            position: relative;
+        }
+
+        .screen {
+            width: 95%;
+            max-width: 740px;
+            background: white;
+            border-radius: 30px;
+            border: 6px solid var(--primary);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+            text-align: center;
+            padding: 28px 22px;
+            animation: fadeIn 0.35s ease;
+        }
+
+        .screen.yellow {
+            background: var(--panel-yellow);
+            border-color: var(--panel-yellow-border);
+            box-shadow: 0 10px 0 var(--panel-yellow-shadow);
+            color: #5d4037;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-title {
+            margin: 0 0 10px;
+            font-size: clamp(1.8rem, 5.4vw, 3rem);
+            color: #e65100;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        .subtitle {
+            margin: 0 0 16px;
+            font-size: clamp(1rem, 3.5vw, 1.6rem);
+            color: #2e7d32;
+        }
+
+        .warning {
+            color: #c62828;
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            margin: 8px 0 0;
+        }
+
+        .btn-main {
+            background: var(--primary);
+            color: white;
+            border: 2px solid white;
+            border-radius: 999px;
+            padding: 14px 28px;
+            font-size: clamp(1rem, 3.5vw, 1.4rem);
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 6px 0 var(--primary-dark);
+            transition: transform 0.18s, box-shadow 0.18s;
+            min-width: 170px;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 var(--primary-dark);
+        }
+
+        .btn-main:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 var(--primary-dark);
+        }
+
+        .btn-green {
+            background: var(--secondary);
+            box-shadow: 0 6px 0 var(--secondary-dark);
+        }
+
+        .btn-green:hover {
+            box-shadow: 0 8px 0 var(--secondary-dark);
+        }
+
+        .btn-green:active {
+            box-shadow: 0 2px 0 var(--secondary-dark);
+        }
+
+        .btn-danger {
+            background: #e53935;
+            box-shadow: 0 6px 0 #b71c1c;
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 0 #b71c1c;
+        }
+
+        .btn-danger:active {
+            box-shadow: 0 2px 0 #b71c1c;
+        }
+
+        .instruction-box {
+            background: rgba(255, 255, 255, 0.8);
+            border: 3px dashed rgba(218, 93, 100, 0.5);
+            border-radius: 20px;
+            padding: 16px;
+            margin: 18px 0;
+            color: #5d4037;
+            line-height: 1.5;
+            font-size: 1rem;
+        }
+
+        .mini-arrow {
+            display: inline-flex;
+            width: 28px;
+            height: 28px;
+            align-items: center;
+            justify-content: center;
+            background: #ff9800;
+            border: 2px solid #e65100;
+            border-radius: 6px;
+            color: white;
+            margin: 0 2px;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        #close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px solid white;
+            background: #e53935;
+            color: white;
+            font-size: 1.8rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 120;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #close-btn:hover {
+            transform: scale(1.06);
+            background: #c62828;
+        }
+
+        #game-view {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 6px 10px;
+            color: white;
+        }
+
+        .top-ui {
+            background: white;
+            border: 4px solid var(--panel-yellow-border);
+            border-radius: 20px;
+            padding: 8px 16px;
+            text-align: center;
+            color: #e65100;
+            margin-bottom: 6px;
+        }
+
+        .lives-display {
+            min-height: 30px;
+            letter-spacing: 3px;
+            font-size: clamp(1.1rem, 3.8vw, 1.6rem);
+        }
+
+        .score-display {
+            font-size: clamp(0.85rem, 2.8vw, 1.1rem);
+        }
+
+        .maze-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 1px;
+            width: 76vmin;
+            height: 76vmin;
+            max-width: 390px;
+            max-height: 390px;
+            background: var(--maze-bg);
+            border: 6px solid var(--maze-border);
+            border-radius: 12px;
+            margin: 6px 0;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(0.72rem, 3.5vmin, 1.9rem);
+            background: var(--maze-path);
+        }
+
+        .wall {
+            background: var(--maze-wall);
+            border-radius: 2px;
+        }
+
+        .wall::after {
+            content: "🌳";
+            font-size: 0.68em;
+        }
+
+        .d-pad {
+            width: 150px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .control-btn {
+            background: #ff9800;
+            border: 3px solid #e65100;
+            border-radius: 12px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1;
+            cursor: pointer;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            background: #e65100;
+        }
+
+        #msg-box {
+            position: absolute;
+            z-index: 250;
+            width: min(92%, 460px);
+        }
+
+        .msg-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .organic-corn-container {
+            width: 100%;
+            max-width: 150px;
+            margin: 0 auto 14px;
+            filter: drop-shadow(5px 8px 12px rgba(0, 0, 0, 0.1));
+        }
+
+        .organic-corn-container svg {
+            width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 600px) {
+            .screen {
+                padding: 20px 14px;
+                border-radius: 20px;
+            }
+
+            #close-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 1.55rem;
+            }
+
+            .d-pad {
+                width: 136px;
+            }
+
+            .maze-grid {
+                width: 84vmin;
+                height: 84vmin;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <button id="close-btn" class="hidden" type="button" aria-label="Fechar jogo">×</button>
+
+        <div id="msg-box" class="screen yellow hidden">
+            <p style="font-size: clamp(1.2rem, 4vw, 1.8rem); margin: 0;">DESEJA SAIR DO JOGO?</p>
+            <div class="msg-actions">
+                <button id="confirm-exit-btn" class="btn-main btn-danger" type="button">SIM</button>
+                <button id="cancel-exit-btn" class="btn-main btn-green" type="button">NÃO</button>
+            </div>
+        </div>
+
+        <div id="start-screen" class="screen yellow">
+            <h1 class="game-title">COLHEITA DE MILHO</h1>
+            <p class="subtitle">AJUDE A GALINHA RUIVA A COLHER O MILHO!</p>
+            <div style="font-size: 4.5rem; margin: 0 0 8px;">🐔</div>
+            <p class="warning">ELA DEVE FUGIR DOS ANIMAIS PREGUIÇOSOS.</p>
+
+            <div class="instruction-box">
+                <p style="margin: 0 0 6px;"><strong>COMO JOGAR:</strong></p>
+                <p style="margin: 0;">
+                    USE AS SETAS:
+                    <span class="mini-arrow">▲</span>
+                    <span class="mini-arrow">◀</span>
+                    <span class="mini-arrow">▼</span>
+                    <span class="mini-arrow">▶</span>
+                </p>
+            </div>
+
+            <button id="start-btn" class="btn-main btn-green" type="button">VAMOS LÁ!</button>
+        </div>
+
+        <div id="game-view" class="hidden">
+            <div class="top-ui">
+                <div id="lives-container" class="lives-display">🐔🐔🐔🐔🐔</div>
+                <div class="score-display">ESPIGAS DE MILHO: <span id="score-text">0</span></div>
+            </div>
+
+            <div id="maze" class="maze-grid"></div>
+
+            <div class="d-pad">
+                <div></div>
+                <button class="control-btn" type="button" data-dir="up">▲</button>
+                <div></div>
+                <button class="control-btn" type="button" data-dir="left">◀</button>
+                <button class="control-btn" type="button" data-dir="down">▼</button>
+                <button class="control-btn" type="button" data-dir="right">▶</button>
+            </div>
+        </div>
+
+        <div id="end-screen" class="screen yellow hidden">
+            <h1 class="game-title" id="end-title">FIM DE JOGO!</h1>
+
+            <div class="organic-corn-container">
+                <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#eab308;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#facc15;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#ca8a04;stop-opacity:1" />
+                        </linearGradient>
+                        <pattern id="grainPattern" x="0" y="0" width="16" height="12" patternUnits="userSpaceOnUse">
+                            <rect x="1" y="1" width="12" height="9" rx="4" fill="#fde047" />
+                            <path d="M3 3 C 5 2, 9 2, 10 3" stroke="white" stroke-width="0.5" fill="none" opacity="0.4"/>
+                        </pattern>
+                        <linearGradient id="outerLeaf" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#4d7c0f;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#65a30d;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M190 420 Q 200 460, 215 425 L 205 400 L 195 400 Z" fill="#365314" />
+                    <path d="M200 400 Q 280 350, 260 100 Q 180 150, 200 400" fill="#3f6212" opacity="0.5" />
+                    <path d="M200 400 Q 260 400, 255 220 Q 250 80, 200 60 Q 150 80, 145 220 Q 140 400, 200 400" fill="url(#bodyGrad)" />
+                    <path d="M200 400 Q 260 400, 255 220 Q 250 80, 200 60 Q 150 80, 145 220 Q 140 400, 200 400" fill="url(#grainPattern)" opacity="0.7" />
+                    <g stroke="#78350f" stroke-width="0.4" fill="none" opacity="0.6">
+                        <path d="M185 70 Q 170 30, 160 45" />
+                        <path d="M195 62 Q 190 20, 180 35" />
+                        <path d="M205 62 Q 215 15, 225 40" />
+                        <path d="M215 75 Q 235 35, 245 50" />
+                    </g>
+                    <path d="M200 410 Q 120 410, 110 200 Q 130 250, 180 380 Q 190 395, 200 410" fill="url(#outerLeaf)" />
+                    <path d="M200 410 Q 300 410, 310 180 Q 270 230, 220 385 Q 210 400, 200 410" fill="#84cc16" />
+                    <path d="M200 410 Q 230 410, 240 320 Q 210 340, 200 410" fill="#a3e635" />
+                    <g stroke="white" stroke-width="0.2" opacity="0.2" fill="none">
+                        <path d="M120 220 Q 140 300, 180 380" />
+                        <path d="M295 200 Q 260 300, 225 380" />
+                    </g>
+                </svg>
+            </div>
+
+            <p style="font-size: clamp(1rem, 3.2vw, 1.3rem); margin: 0 0 8px;">
+                VOCÊ PEGOU <span id="final-score">0</span> ESPIGAS DE MILHO!
+            </p>
+            <p id="feedback-msg" style="font-size: clamp(0.95rem, 2.8vw, 1.12rem); line-height: 1.45; margin: 0 0 20px;"></p>
+            <button id="play-again-btn" class="btn-main btn-green" type="button">JOGAR DE NOVO</button>
+        </div>
+    </div>
+
+    <script>
+        const MAP_LAYOUT_ORIG = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, "P", 2, 2, 1, 2, 2, 2, 2, 1],
+            [1, 2, 1, 2, 1, 2, 1, 1, 2, 1],
+            [1, 2, 1, 2, 2, 2, 2, 1, 2, 1],
+            [1, 2, 1, 1, 1, 1, 2, 1, 2, 1],
+            [1, "E", 2, 2, 2, 2, 2, 2, 2, 1],
+            [1, 2, 1, 1, 2, 1, 1, 1, 2, 1],
+            [1, 2, 2, 1, 2, 2, 2, 2, "E", 1],
+            [1, 1, 2, 2, 2, 1, 2, 2, 2, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        const startScreen = document.getElementById("start-screen");
+        const gameView = document.getElementById("game-view");
+        const endScreen = document.getElementById("end-screen");
+        const msgBox = document.getElementById("msg-box");
+        const closeBtn = document.getElementById("close-btn");
+        const mazeEl = document.getElementById("maze");
+        const livesContainer = document.getElementById("lives-container");
+        const scoreText = document.getElementById("score-text");
+        const finalScoreEl = document.getElementById("final-score");
+        const endTitleEl = document.getElementById("end-title");
+        const feedbackMsgEl = document.getElementById("feedback-msg");
+
+        let currentMap = [];
+        let playerPos = { r: 1, c: 1 };
+        let enemies = [];
+        let score = 0;
+        let totalCorn = 0;
+        let lives = 5;
+        let gameActive = false;
+        let enemyInterval = null;
+
+        function cloneMap() {
+            return MAP_LAYOUT_ORIG.map((row) => [...row]);
+        }
+
+        function setupNewMatch() {
+            currentMap = cloneMap();
+            playerPos = { r: 1, c: 1 };
+            enemies = [
+                { r: 5, c: 1, char: "🐱" },
+                { r: 7, c: 8, char: "🐷" },
+                { r: 1, c: 8, char: "🐮" },
+                { r: 8, c: 8, char: "🐶" }
+            ];
+            score = 0;
+            lives = 5;
+            scoreText.textContent = "0";
+            renderMaze();
+            updateView();
+        }
+
+        function showStartScreen() {
+            gameActive = false;
+            clearInterval(enemyInterval);
+            enemyInterval = null;
+
+            startScreen.classList.remove("hidden");
+            gameView.classList.add("hidden");
+            endScreen.classList.add("hidden");
+            msgBox.classList.add("hidden");
+            closeBtn.classList.add("hidden");
+        }
+
+        function startGame() {
+            setupNewMatch();
+            startScreen.classList.add("hidden");
+            endScreen.classList.add("hidden");
+            msgBox.classList.add("hidden");
+            gameView.classList.remove("hidden");
+            closeBtn.classList.remove("hidden");
+            gameActive = true;
+            startTimers();
+        }
+
+        function renderMaze() {
+            mazeEl.innerHTML = "";
+            totalCorn = 0;
+
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const cell = document.createElement("div");
+                    cell.id = `cell-${r}-${c}`;
+                    cell.className = "cell";
+
+                    const value = currentMap[r][c];
+                    if (value === 1) {
+                        cell.classList.add("wall");
+                    } else {
+                        if (value === 2) totalCorn++;
+                    }
+
+                    mazeEl.appendChild(cell);
+                }
+            }
+        }
+
+        function updateView() {
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const cell = document.getElementById(`cell-${r}-${c}`);
+                    if (!cell) continue;
+
+                    cell.textContent = currentMap[r][c] === 2 ? "🌽" : "";
+                }
+            }
+
+            enemies.forEach((enemy) => {
+                const enemyCell = document.getElementById(`cell-${enemy.r}-${enemy.c}`);
+                if (enemyCell) enemyCell.textContent = enemy.char;
+            });
+
+            const playerCell = document.getElementById(`cell-${playerPos.r}-${playerPos.c}`);
+            if (playerCell) playerCell.textContent = "🐔";
+
+            livesContainer.textContent = "🐔".repeat(lives);
+            scoreText.textContent = String(score);
+        }
+
+        function isValidMove(r, c) {
+            return r >= 0 && r < 10 && c >= 0 && c < 10 && currentMap[r][c] !== 1;
+        }
+
+        function handleMove(direction) {
+            if (!gameActive) return;
+
+            let nextR = playerPos.r;
+            let nextC = playerPos.c;
+
+            if (direction === "up") nextR -= 1;
+            if (direction === "down") nextR += 1;
+            if (direction === "left") nextC -= 1;
+            if (direction === "right") nextC += 1;
+
+            if (!isValidMove(nextR, nextC)) return;
+
+            playerPos = { r: nextR, c: nextC };
+
+            if (currentMap[nextR][nextC] === 2) {
+                currentMap[nextR][nextC] = 0;
+                score += 1;
+                if (score >= totalCorn && totalCorn > 0) {
+                    updateView();
+                    endGame(true);
+                    return;
+                }
+            }
+
+            checkCollision();
+            updateView();
+        }
+
+        function moveEnemies() {
+            if (!gameActive) return;
+
+            const dirs = [
+                { r: -1, c: 0 },
+                { r: 1, c: 0 },
+                { r: 0, c: -1 },
+                { r: 0, c: 1 }
+            ];
+
+            enemies.forEach((enemy) => {
+                const validDirs = dirs.filter((d) => isValidMove(enemy.r + d.r, enemy.c + d.c));
+                if (validDirs.length === 0) return;
+
+                const move = validDirs[Math.floor(Math.random() * validDirs.length)];
+                enemy.r += move.r;
+                enemy.c += move.c;
+            });
+
+            checkCollision();
+            updateView();
+        }
+
+        function checkCollision() {
+            if (!gameActive) return;
+
+            const collided = enemies.some((enemy) => enemy.r === playerPos.r && enemy.c === playerPos.c);
+            if (!collided) return;
+
+            lives -= 1;
+            if (lives <= 0) {
+                lives = 0;
+                updateView();
+                endGame(false);
+                return;
+            }
+
+            mazeEl.style.borderColor = "#ff5252";
+            setTimeout(() => {
+                mazeEl.style.borderColor = "var(--maze-border)";
+            }, 280);
+
+            playerPos = { r: 1, c: 1 };
+        }
+
+        function startTimers() {
+            clearInterval(enemyInterval);
+            enemyInterval = setInterval(moveEnemies, 1500);
+        }
+
+        function endGame(victory) {
+            gameActive = false;
+            clearInterval(enemyInterval);
+            enemyInterval = null;
+
+            gameView.classList.add("hidden");
+            closeBtn.classList.add("hidden");
+            msgBox.classList.add("hidden");
+            endScreen.classList.remove("hidden");
+
+            finalScoreEl.textContent = String(score);
+
+            if (victory) {
+                endTitleEl.textContent = "PARABÉNS!";
+                feedbackMsgEl.textContent = "A GALINHA RUIVA COLHEU TODO O MILHO! VOCÊ TRABALHOU MUITO BEM E AGORA HÁ BASTANTE MILHO PARA O BOLO!";
+            } else {
+                endTitleEl.textContent = "FIM DE JOGO!";
+                feedbackMsgEl.textContent = "OS ANIMAIS PREGUIÇOSOS ATRAPALHARAM A COLHEITA. VAMOS TENTAR DE NOVO?";
+            }
+        }
+
+        document.getElementById("start-btn").addEventListener("click", startGame);
+        document.getElementById("play-again-btn").addEventListener("click", startGame);
+
+        document.querySelectorAll(".control-btn").forEach((btn) => {
+            const direction = btn.dataset.dir;
+            btn.addEventListener("pointerdown", () => handleMove(direction));
+        });
+
+        closeBtn.addEventListener("click", () => {
+            if (!gameActive) return;
+            msgBox.classList.remove("hidden");
+        });
+
+        document.getElementById("cancel-exit-btn").addEventListener("click", () => {
+            msgBox.classList.add("hidden");
+        });
+
+        document.getElementById("confirm-exit-btn").addEventListener("click", showStartScreen);
+
+        window.addEventListener("keydown", (event) => {
+            if (!gameActive) return;
+
+            if (event.key === "ArrowUp") handleMove("up");
+            if (event.key === "ArrowDown") handleMove("down");
+            if (event.key === "ArrowLeft") handleMove("left");
+            if (event.key === "ArrowRight") handleMove("right");
+        });
+
+        showStartScreen();
+    </script>
+</body>
+</html>
