@@ -43,9 +43,9 @@
         }
 
         #btn-exit {
-            position: absolute;
-            top: 8px;
-            right: 8px;
+            position: fixed;
+            top: 12px;
+            right: 12px;
             width: 32px;
             height: 32px;
             background: var(--danger-color);
@@ -68,15 +68,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 14px;
+            padding: 8px 50px 8px 14px;
             background: rgba(255,255,255,0.25);
             border-bottom: 3px solid var(--secondary);
+            position: relative;
         }
 
         #header .title {
             font-size: 1rem;
             color: white;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            flex: 1;
         }
 
         #timer-display {
@@ -654,6 +656,7 @@
             updateCounts();
             updateProgress();
 
+            dragEl.classList.remove('wrong');
             dragEl.classList.add('correct');
             dragEl.style.pointerEvents = 'none';
 
@@ -664,7 +667,10 @@
         } else {
             /* ERROU */
             playBuzz();
+            dragEl.classList.remove('correct');
             dragEl.classList.add('wrong');
+            dragEl.style.pointerEvents = 'auto';
+            dragEl.style.display = 'flex';
             setTimeout(() => dragEl.classList.remove('wrong'), 500);
         }
     }

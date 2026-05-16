@@ -94,9 +94,13 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(41, 98, 255, 0.9);
+            background: rgba(41, 98, 255, 1);
             justify-content: center;
             align-items: center;
+        }
+
+        body.modal-active .hotspot.found::after {
+            display: none !important;
         }
 
         .modal-content {
@@ -252,11 +256,13 @@
             function showWinModal(){
                 stopTimer();
                 winModal.style.display = 'flex';
+                document.body.classList.add('modal-active');
             }
 
             function resetGame(){
                 resetTimerDisplay();
                 winModal.style.display = 'none';
+                document.body.classList.remove('modal-active');
             }
 
             // Posiciona hotspots com base no tamanho real da imagem renderizada
